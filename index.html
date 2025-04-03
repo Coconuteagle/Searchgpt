@@ -164,7 +164,8 @@
         const DEBUG = true; // Enable console logging
         function log(...args) {
             if (DEBUG) {
-                console.log('[챗봇 로그]', new Date().toISOString(), ...args);
+                // Enhanced Logging Point 4: Add timestamp prefix
+                console.log(`[챗봇 로그 ${new Date().toLocaleTimeString()}]`, ...args);
             }
         }
 
@@ -188,24 +189,22 @@
         function applyTheme(isDark) {
             if (isDark) {
                 body.classList.add('dark');
-                themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>'; // Show sun icon in dark mode
+                themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
             } else {
                 body.classList.remove('dark');
-                themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>'; // Show moon icon in light mode
+                themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
             }
         }
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
         let currentModeIsDark = localStorage.getItem('dark-mode') === 'true' || (localStorage.getItem('dark-mode') === null && prefersDark.matches);
-        applyTheme(currentModeIsDark); // Apply theme on initial load
+        applyTheme(currentModeIsDark);
 
         themeToggleBtn.addEventListener('click', () => {
             currentModeIsDark = !currentModeIsDark;
             localStorage.setItem('dark-mode', currentModeIsDark ? 'true' : 'false');
             applyTheme(currentModeIsDark);
         });
-        // Listen for system theme changes
          prefersDark.addEventListener('change', (e) => {
-             // Only change if user hasn't manually overridden theme
              if (localStorage.getItem('dark-mode') === null) {
                 currentModeIsDark = e.matches;
                 applyTheme(currentModeIsDark);
@@ -250,7 +249,7 @@
         function escapeHtml(unsafe) {
             if (unsafe === null || typeof unsafe === 'undefined') return '';
              return unsafe
-                 .toString() // Ensure it's a string
+                 .toString()
                  .replace(/&/g, "&amp;")
                  .replace(/</g, "&lt;")
                  .replace(/>/g, "&gt;")
@@ -260,9 +259,8 @@
 
         function addUserMessage(message) {
             const messageDiv = document.createElement('div');
-            // Use max-w-xl or max-w-2xl for slightly wider user messages if needed
             messageDiv.className = 'user-message p-3 md:p-4 text-gray-800 dark:text-gray-200 max-w-3xl ml-auto mb-4';
-            messageDiv.innerHTML = `<p>${escapeHtml(message)}</p>`; // Escape user input for security
+            messageDiv.innerHTML = `<p>${escapeHtml(message)}</p>`;
             chatMessages.appendChild(messageDiv);
             scrollToBottom();
         }
@@ -270,23 +268,20 @@
         function addBotMessage(message, isHTML = false) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'bot-message p-3 md:p-4 text-gray-800 dark:text-gray-200 max-w-3xl mr-auto mb-4';
-            // Sanitize HTML if isHTML is true (basic example)
-            // For production, use a robust sanitizer like DOMPurify
             if (isHTML) {
-                 // Basic sanitization (replace with DOMPurify if possible)
-                 const sanitizedHTML = message.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ''); // Remove script tags
+                 const sanitizedHTML = message.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ''); // Basic sanitize
                  messageDiv.innerHTML = sanitizedHTML;
             } else {
                 messageDiv.innerHTML = `<p>${escapeHtml(message)}</p>`;
             }
             chatMessages.appendChild(messageDiv);
             scrollToBottom();
-            return messageDiv; // Return element for potential modification (like adding sources)
+            return messageDiv;
         }
 
          function addLoadingMessage() {
             const existingLoading = document.getElementById('loading-message');
-            if (existingLoading) return existingLoading; // Don't add multiple
+            if (existingLoading) return existingLoading;
 
             const messageDiv = document.createElement('div');
             messageDiv.className = 'bot-message p-4 text-gray-800 dark:text-gray-200 max-w-3xl mr-auto mb-4';
@@ -298,7 +293,7 @@
                 dot.className = 'typing-dot';
                 loadingSpan.appendChild(dot);
             }
-            messageDiv.appendChild(loadingSpan); // Add ellipsis span
+            messageDiv.appendChild(loadingSpan);
             chatMessages.appendChild(messageDiv);
             scrollToBottom();
             return messageDiv;
@@ -308,12 +303,10 @@
             const loadingMessage = document.getElementById('loading-message');
             if (loadingMessage) {
                  const ellipsisSpan = loadingMessage.querySelector('.ellipsis');
-                 // Update text content before the ellipsis
                  loadingMessage.childNodes[0].nodeValue = escapeHtml(message) + ' ';
-                 if (!ellipsisSpan) { // Make sure ellipsis is still there
+                 if (!ellipsisSpan) {
                      const newEllipsisSpan = document.createElement('span');
                      newEllipsisSpan.className = 'ellipsis';
-                     // Recreate dots if needed
                       for (let i = 0; i < 3; i++) {
                            const dot = document.createElement('span');
                            dot.className = 'typing-dot';
@@ -322,9 +315,8 @@
                      loadingMessage.appendChild(newEllipsisSpan);
                  }
             } else {
-                // If loading message was removed somehow, add it again
                  addLoadingMessage();
-                 updateLoadingMessage(message); // Call again to set the text
+                 updateLoadingMessage(message);
             }
         }
 
@@ -337,7 +329,7 @@
         }
 
         function updateProgress(percent, statusText) {
-            progressBar.style.width = `${Math.min(100, Math.max(0, percent))}%`; // Clamp between 0-100
+            progressBar.style.width = `${Math.min(100, Math.max(0, percent))}%`;
             progressStatus.textContent = statusText;
 
             if (percent > 0 && progressSection.classList.contains('hidden')) {
@@ -345,16 +337,14 @@
             }
 
             if (percent >= 100) {
-                // Hide progress bar shortly after completion
                 setTimeout(() => {
-                    if (progressBar.style.width === '100%') { // Check if it's still 100% before hiding
+                    if (progressBar.style.width === '100%') {
                          progressSection.classList.add('hidden');
-                         progressBar.style.width = '0%'; // Reset for next time
-                         progressStatus.textContent = ''; // Clear status
+                         progressBar.style.width = '0%';
+                         progressStatus.textContent = '';
                     }
-                }, 1500); // Keep it visible for 1.5 seconds after 100%
+                }, 1500);
             } else if (percent <= 0) {
-                 // Hide immediately if progress is 0 or less
                  progressSection.classList.add('hidden');
                  progressBar.style.width = '0%';
                  progressStatus.textContent = '';
@@ -362,7 +352,6 @@
         }
 
         function scrollToBottom() {
-             // A small delay can help ensure rendering is complete before scrolling
              setTimeout(() => {
                 chatMessages.scrollTop = chatMessages.scrollHeight;
              }, 50);
@@ -372,15 +361,14 @@
             if (isLoading) {
                 sendButton.disabled = true;
                 userInput.disabled = true;
-                sendButton.classList.add('disabled:opacity-50'); // Visual cue
-                 addLoadingMessage(); // Show loading dots immediately
-                 updateProgress(0, '시작 중...'); // Show progress bar immediately
+                sendButton.classList.add('disabled:opacity-50');
+                 addLoadingMessage();
+                 updateProgress(0, '시작 중...');
             } else {
                 sendButton.disabled = false;
                 userInput.disabled = false;
                 sendButton.classList.remove('disabled:opacity-50');
                  removeLoadingMessage();
-                 // updateProgress handles hiding itself when >= 100%
             }
         }
 
@@ -401,13 +389,14 @@
             }
 
             try {
-                const apiUrl = `https://www.googleapis.com/customsearch/v1?key=${googleApiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query)}&num=8`; // Fetch 8 results
+                const apiUrl = `https://www.googleapis.com/customsearch/v1?key=${googleApiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query)}&num=8`;
                 log("Google Search API Request:", apiUrl);
                 const response = await fetch(apiUrl);
                 const data = await response.json();
 
                 if (!response.ok || data.error) {
-                    log('Google Search API Error:', data.error || `HTTP ${response.status}`);
+                    // Enhanced Logging Point 4
+                    log('Google Search API Error:', data.error || `HTTP ${response.status} ${response.statusText}`);
                     throw new Error(`Google 검색 API 오류: ${data.error ? data.error.message : `HTTP ${response.status}`}`);
                 }
                 updateProgress(20, '검색 결과 처리 중...');
@@ -415,175 +404,204 @@
                      log("Google Search: 결과 없음");
                     return [];
                 }
-                // Extract relevant fields including snippet
                 const results = data.items.map(item => ({
                     title: item.title,
                     link: item.link,
-                    snippet: item.snippet, // Ensure snippet is captured
-                    pagemap: item.pagemap // Might be useful for metadata later
+                    snippet: item.snippet,
+                    pagemap: item.pagemap
                 }));
-                cache.setSearch(query, results); // Cache successful results
+                cache.setSearch(query, results);
                 return results;
             } catch (error) {
-                log('Google 검색 중 예외 발생:', error);
-                // Don't cache errors
-                throw error; // Re-throw to be caught by processMessage
+                // Enhanced Logging Point 4
+                log('Google 검색 중 예외 발생:', error.message, error.stack);
+                throw error;
             }
         }
 
         // --- Web Crawling ---
+
+        // Proxy Improvement Point 2: Add Cooldown Logic
+        const PROXY_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes cooldown period
+
         const proxies = [
              // Prioritize potentially more reliable proxies first
-             { name: 'corsproxy.io', url: (targetUrl) => `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, active: true },
-             { name: 'allorigins', url: (targetUrl) => `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, active: true },
-             // cors-anywhere is often rate-limited or requires activation
-             // { name: 'corsanywhere', url: (targetUrl) => `https://cors-anywhere.herokuapp.com/${targetUrl}`, active: true }
+             // Add cooldownUntil property to each proxy
+             { name: 'corsproxy.io', url: (targetUrl) => `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, cooldownUntil: 0 },
+             { name: 'allorigins', url: (targetUrl) => `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, cooldownUntil: 0 },
+             // Add more proxies here if needed, each with cooldownUntil: 0
+             // { name: 'corsanywhere', url: (targetUrl) => `https://cors-anywhere.herokuapp.com/${targetUrl}`, cooldownUntil: 0 }
         ];
 
-        async function crawlWebpage(url, attempt = 0) {
+        async function crawlWebpage(url, attempt = 0) { // attempt now tracks retries across *available* proxies
             const cachedContent = cache.getCrawl(url);
             if (cachedContent) {
                 return cachedContent; // Return cached data immediately
             }
 
-            const activeProxies = proxies.filter(p => p.active);
-             if (activeProxies.length === 0) {
-                 log("크롤링 실패: 활성화된 프록시 없음", url);
-                 // Consider reactivating all proxies here if none are left? Or handle upstream.
-                 proxies.forEach(p => p.active = true); // Let's reactivate for next *different* URL.
-                 return `크롤링 실패 (활성 프록시 없음): ${url}`;
-             }
+            // Proxy Improvement Point 2: Filter available proxies (not on cooldown)
+            const availableProxies = proxies.filter(p => Date.now() >= (p.cooldownUntil || 0));
 
-             const maxRetriesPerUrl = activeProxies.length; // Try each active proxy once per URL
-             if (attempt >= maxRetriesPerUrl) {
-                 log("크롤링 최대 재시도 도달:", url);
-                  proxies.forEach(p => p.active = true); // Reactivate proxies for the next URL.
-                 return `크롤링 실패 (최대 재시도): ${url}`;
-             }
+            if (availableProxies.length === 0) {
+                const soonestAvailable = proxies.reduce((soonest, p) => ((p.cooldownUntil || 0) < (soonest.cooldownUntil || 0) ? p : soonest), proxies[0]);
+                const waitTime = soonestAvailable ? Math.ceil(((soonestAvailable.cooldownUntil || 0) - Date.now()) / 1000) : 'N/A';
+                // Enhanced Logging Point 4
+                log(`크롤링 실패: 모든 프록시가 현재 쿨다운 중. URL: ${url}. 다음 활성화까지 약 ${waitTime}초`);
+                return `크롤링 실패 (모든 프록시 쿨다운 중, 약 ${waitTime}초 후 재시도 가능): ${url}`;
+            }
 
-             const proxyIndex = attempt % activeProxies.length; // Cycle through active proxies
-             const proxy = activeProxies[proxyIndex];
+            const maxRetriesForUrl = availableProxies.length; // Max attempts = number of currently usable proxies
+            if (attempt >= maxRetriesForUrl) {
+                 // Enhanced Logging Point 4
+                log(`크롤링 최대 재시도 도달 (${maxRetriesForUrl}회). URL: ${url}`);
+                return `크롤링 실패 (최대 재시도): ${url}`;
+            }
 
-            log(`[${proxy.name}] 크롤링 시도 (${attempt + 1}/${maxRetriesPerUrl}):`, url);
+            // Select the next available proxy based on the attempt number
+            const proxy = availableProxies[attempt];
+
+            // Enhanced Logging Point 4: Log which proxy is being used for the attempt
+            log(`[${proxy.name}] 크롤링 시도 (${attempt + 1}/${maxRetriesForUrl}): ${url}`);
 
             try {
                 if (!url || !url.startsWith('http')) {
+                    // Enhanced Logging Point 4: Log invalid URL issue
+                    log(`[${proxy.name}] 크롤링 건너뜀 (유효하지 않은 URL): ${url}`);
                     throw new Error(`유효하지 않은 URL: ${url}`);
                 }
-                // Basic file extension check (might miss some cases)
-                 const path = url.split('?')[0]; // Ignore query parameters for extension check
+                 const path = url.split('?')[0];
                  const fileExtension = path.includes('.') ? path.split('.').pop().toLowerCase() : '';
                 const nonHtmlExtensions = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'zip', 'rar', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'mp3', 'mp4', 'avi', 'mov', 'exe', 'dmg'];
                 if (nonHtmlExtensions.includes(fileExtension)) {
-                     log(`크롤링 건너뜀 (파일 형식 ${fileExtension}): ${url}`);
+                     // Enhanced Logging Point 4: Log skipped file type
+                     log(`[${proxy.name}] 크롤링 건너뜀 (파일 형식 ${fileExtension}): ${url}`);
                     return `크롤링 건너뜀 (파일 형식 ${fileExtension.toUpperCase()}): ${url}`;
                 }
 
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => {
                     controller.abort();
-                    log(`[${proxy.name}] 타임아웃 (15s): ${url}`);
-                 }, 15000); // 15-second timeout
+                    // Enhanced Logging Point 4: Log timeout details
+                    log(`[${proxy.name}] 타임아웃 (15s) 발생. URL: ${url}`);
+                 }, 15000);
 
                 const proxyUrl = proxy.url(url);
                 const headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36', // Reasonably modern UA
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                     'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-                    'Upgrade-Insecure-Requests': '1', // Common browser header
+                    'Upgrade-Insecure-Requests': '1',
                      'Sec-Fetch-Dest': 'document',
                      'Sec-Fetch-Mode': 'navigate',
-                     'Sec-Fetch-Site': 'cross-site', // Indicate coming from different origin via proxy
+                     'Sec-Fetch-Site': 'cross-site',
                 };
 
                 const response = await fetch(proxyUrl, {
                     signal: controller.signal,
                     headers: headers,
-                    mode: 'cors', // Necessary for cross-origin requests via proxies
-                    referrerPolicy: 'strict-origin-when-cross-origin' // Common referrer policy
+                    mode: 'cors',
+                    referrerPolicy: 'strict-origin-when-cross-origin'
                  });
-                clearTimeout(timeoutId); // Clear timeout if fetch completes
+                clearTimeout(timeoutId);
 
                 if (!response.ok) {
-                    // Read response body for more info if possible (but limit size)
                      let errorBody = '';
                      try { errorBody = await response.text(); } catch (_) {}
-                     log(`[${proxy.name}] HTTP 오류 ${response.status} (${response.statusText}). 응답 일부: ${errorBody.substring(0, 200)}...`);
-                     throw new Error(`HTTP 오류 ${response.status}`); // Simplified error for propagation
+                     // Enhanced Logging Point 4: Log HTTP error details
+                     log(`[${proxy.name}] HTTP 오류 ${response.status} (${response.statusText}). URL: ${url}. 응답 일부: ${errorBody.substring(0, 200)}...`);
+                     throw new Error(`HTTP 오류 ${response.status}`);
                 }
 
                 const contentType = response.headers.get('content-type') || '';
-                 log(`[${proxy.name}] 응답 Content-Type: ${contentType}`, url);
+                 // Enhanced Logging Point 4: Log Content-Type
+                 log(`[${proxy.name}] 응답 Content-Type: ${contentType}. URL: ${url}`);
                  if (!contentType.includes('text/html') && !contentType.includes('application/xhtml+xml') && !contentType.includes('text/plain')) {
                     if (contentType.includes('application/json')) {
                         try {
                             const json = await response.json();
                             const textContent = `JSON 데이터:\n${JSON.stringify(json, null, 2)}`.substring(0, 8000);
-                            cache.setCrawl(url, textContent); // Cache JSON content
+                            cache.setCrawl(url, textContent);
+                            log(`[${proxy.name}] JSON 데이터 처리 완료. URL: ${url}`);
                             return textContent;
-                        } catch (e) { return `JSON 파싱 오류. Content-Type: ${contentType}, URL: ${url}`; }
-                     } else if (contentType.includes('xml') && !contentType.includes('xhtml')) { // Handle general XML
+                        } catch (e) {
+                            // Enhanced Logging Point 4
+                            log(`[${proxy.name}] JSON 파싱 오류. Content-Type: ${contentType}, URL: ${url}`, e);
+                            return `JSON 파싱 오류. Content-Type: ${contentType}, URL: ${url}`;
+                        }
+                     } else if (contentType.includes('xml') && !contentType.includes('xhtml')) {
                          try {
                              const xmlText = await response.text();
                              const textContent = `XML 데이터:\n${xmlText}`.substring(0, 8000);
-                              cache.setCrawl(url, textContent); // Cache XML content
+                              cache.setCrawl(url, textContent);
+                             log(`[${proxy.name}] XML 데이터 처리 완료. URL: ${url}`);
                              return textContent;
-                         } catch (e) { return `XML 파싱 오류. Content-Type: ${contentType}, URL: ${url}`; }
+                         } catch (e) {
+                              // Enhanced Logging Point 4
+                             log(`[${proxy.name}] XML 파싱 오류. Content-Type: ${contentType}, URL: ${url}`, e);
+                             return `XML 파싱 오류. Content-Type: ${contentType}, URL: ${url}`;
+                         }
                      }
-                     log(`지원하지 않는 Content-Type: ${contentType}, URL: ${url}`);
+                     // Enhanced Logging Point 4
+                     log(`[${proxy.name}] 지원하지 않는 Content-Type: ${contentType}, URL: ${url}`);
                      return `지원하지 않는 콘텐츠 타입 (${contentType}): ${url}`;
                  }
 
                 const html = await response.text();
                 if (!html || html.trim().length === 0) {
+                    // Enhanced Logging Point 4
+                    log(`[${proxy.name}] 빈 응답 또는 내용 없음. URL: ${url}`);
                     throw new Error('빈 응답 또는 내용 없음');
                 }
 
-                 // --- HTML Parsing and Content Extraction ---
                  const parser = new DOMParser();
                  const doc = parser.parseFromString(html, 'text/html');
-
-                 // Try to get title and meta description
                  const title = doc.querySelector('title')?.textContent.trim() || url;
                  const metaDescription = doc.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() || '';
-
-                 // Remove common non-content elements aggressively
                  const elementsToRemove = ['script', 'style', 'svg', 'img', 'picture', 'video', 'audio', 'iframe', 'nav', 'header', 'footer', 'aside', 'form', 'noscript', 'button', 'input', 'select', 'textarea', 'label', 'canvas', 'map', 'object', 'embed', '.advertisement', '.ad', '#ad', '.banner', '.popup', '.modal', '.sidebar', '.social-links', '.share-buttons', '.cookie-consent', '[aria-hidden="true"]'];
                  elementsToRemove.forEach(selector => {
-                     try { // Add try-catch for potentially invalid selectors
+                     try {
                          doc.querySelectorAll(selector).forEach(el => el.remove());
                      } catch (e) {
-                         log(`CSS Selector 오류 무시 (${selector}):`, e.message);
+                         // Enhanced Logging Point 4: Log CSS selector errors
+                         log(`[${proxy.name}] CSS Selector 오류 무시 (${selector}), URL: ${url}:`, e.message);
                      }
                  });
 
-                 // Attempt to find the main content area
-                  let mainContent = doc.querySelector('main') ||
+                 let mainContent = doc.querySelector('main') ||
                                    doc.querySelector('article') ||
                                    doc.querySelector('[role="main"]') ||
-                                   doc.querySelector('.content, .main-content, .post-content, .entry-content, #content, #main, .article-body, .entry, .page-content'); // Added more selectors
+                                   doc.querySelector('.content, .main-content, .post-content, .entry-content, #content, #main, .article-body, .entry, .page-content');
 
-                 if (!mainContent || mainContent.textContent.trim().length < 100) { // Fallback if main is too small or not found
+                 if (!mainContent || mainContent.textContent.trim().length < 100) {
+                     log(`[${proxy.name}] Main content 작거나 없음, body 사용. URL: ${url}`);
                      mainContent = doc.body;
                  }
 
-                 // Extract text content, trying to preserve structure somewhat
-                  let text = '';
-                  const significantTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote', 'pre', 'div', 'td']; // Add div, td
+                 let text = '';
+                 const significantTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote', 'pre', 'div', 'td'];
                   function extractTextNodes(node) {
                       let nodeText = '';
+                      if (!node) return ''; // Guard against null nodes
                       for (const child of node.childNodes) {
                           if (child.nodeType === Node.TEXT_NODE) {
                               nodeText += child.textContent;
                           } else if (child.nodeType === Node.ELEMENT_NODE) {
                                const tagName = child.tagName.toLowerCase();
-                               const displayStyle = window.getComputedStyle(child).display; // Check display style
-                              // Add newline before block-level or significant elements
+                               let displayStyle = 'inline'; // Default
+                               try { // getComputedStyle can fail in some contexts
+                                   displayStyle = window.getComputedStyle(child).display;
+                               } catch (e) {
+                                    log(`[${proxy.name}] getComputedStyle 오류 무시 (${tagName}), URL: ${url}:`, e.message);
+                                    // Fallback for block-level tags if style check fails
+                                    if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote', 'pre', 'div', 'td', 'tr', 'ul', 'ol', 'section', 'article', 'aside', 'nav', 'header', 'footer'].includes(tagName)) {
+                                        displayStyle = 'block';
+                                    }
+                               }
+
                                if ((significantTags.includes(tagName) || displayStyle.includes('block') || displayStyle.includes('list-item')) && text.length > 0 && !text.endsWith('\n')) {
                                   nodeText += '\n';
                               }
-                              nodeText += extractTextNodes(child); // Recurse
-                               // Add newline after block-level or significant elements
+                              nodeText += extractTextNodes(child);
                                if ((significantTags.includes(tagName) || displayStyle.includes('block') || displayStyle.includes('list-item')) && !nodeText.endsWith('\n')) {
                                   nodeText += '\n';
                               }
@@ -593,104 +611,93 @@
                   }
 
                  text = extractTextNodes(mainContent);
+                 text = text.replace(/(\s*\n\s*){3,}/g, '\n\n')
+                            .replace(/[ \t]{2,}/g, ' ')
+                            .replace(/^\s+|\s+$/gm, '')
+                            .trim();
 
-
-                 // Clean up extracted text
-                 text = text.replace(/(\s*\n\s*){3,}/g, '\n\n') // Reduce multiple blank lines to max 2
-                            .replace(/[ \t]{2,}/g, ' ')      // Reduce multiple spaces/tabs to one space
-                            .replace(/^\s+|\s+$/gm, '')     // Trim whitespace from each line
-                            .trim();                         // Trim leading/trailing whitespace from the whole string
-
-                 // Add Title and Description at the beginning
-                  text = `제목: ${title}\n${metaDescription ? '설명: ' + metaDescription + '\n' : ''}\n---\n\n${text}`;
-
-
-                 // Check length and truncate if necessary
+                 text = `제목: ${title}\n${metaDescription ? '설명: ' + metaDescription + '\n' : ''}\n---\n\n${text}`;
                  const maxLength = 8000;
                  if (text.length > maxLength) {
                      text = text.substring(0, maxLength) + '... [내용 중략됨]';
-                     log(`크롤링 내용 축약됨 (>${maxLength} chars): ${url}`);
+                     log(`[${proxy.name}] 크롤링 내용 축약됨 (>${maxLength} chars). URL: ${url}`);
                  }
 
-                 if (!text || text.length < 50) { // Check if extracted text is meaningful
-                     log(`[${proxy.name}] 유의미한 내용 추출 부족: ${url}, 길이: ${text.length}`);
-                     // Treat as failure if too short? Or let Gemini decide? Let's return it for now.
+                 if (!text || text.length < 50) {
+                     log(`[${proxy.name}] 유의미한 내용 추출 부족 (길이 ${text.length}). URL: ${url}`);
+                     // Return potentially short text, let Gemini decide usability
                  }
 
-                 log('크롤링 성공:', url, '길이:', text.length);
-                 cache.setCrawl(url, text); // Cache the processed text
-                 proxies.forEach(p => p.active = true); // Success, ensure all proxies are active for next different URL.
+                 log(`[${proxy.name}] 크롤링 성공. URL: ${url}, 길이: ${text.length}`);
+                 cache.setCrawl(url, text);
+                 // No need to reactivate proxies here, cooldown handles availability
                  return text;
 
             } catch (error) {
-                log(`[${proxy.name}] '${url}' 크롤링 중 예외 (${attempt + 1}/${maxRetriesPerUrl}):`, error);
+                // Enhanced Logging Point 4: Log exception details
+                log(`[${proxy.name}] '${url}' 크롤링 중 예외 발생 (시도 ${attempt + 1}/${maxRetriesForUrl}):`, error.message, error.stack);
 
-                 // Deactivate the failing proxy *temporarily* for this specific URL's retries
-                 proxy.active = false;
-                 log(`${proxy.name} 프록시 비활성화됨 (현재 URL 재시도용)`);
+                // Proxy Improvement Point 2: Set cooldown for the failed proxy
+                proxy.cooldownUntil = Date.now() + PROXY_COOLDOWN_MS;
+                log(`[${proxy.name}] 프록시 쿨다운 설정됨 (${PROXY_COOLDOWN_MS / 1000}초). URL: ${url}`);
 
-
-                 // Retry with the next proxy for the *same* URL
-                 return crawlWebpage(url, attempt + 1);
+                // Retry with the next available proxy (increment attempt)
+                return crawlWebpage(url, attempt + 1);
             }
         }
 
 
-        // Parallel Web Crawling Function
+        // Parallel Web Crawling Function (No major changes needed here, relies on improved crawlWebpage)
         async function crawlWebpages(pagesToCrawl) {
             const totalSites = pagesToCrawl.length;
             updateProgress(30, `웹페이지 분석 시작 (0/${totalSites})...`);
             log(`${totalSites}개 사이트 크롤링/분석 시작`);
 
             let completedCount = 0;
-             // Use Promise.allSettled to ensure all crawls complete, regardless of individual errors
             const crawlPromises = pagesToCrawl.map(async (pageInfo, index) => {
                  try {
-                      // Reset proxy activity status before each unique URL crawl starts
-                      proxies.forEach(p => p.active = true);
-                     const content = await crawlWebpage(pageInfo.link); // Start attempt 0 for each
+                     // crawlWebpage now handles its own retries internally with available proxies
+                     const content = await crawlWebpage(pageInfo.link); // Start attempt 0
                       completedCount++;
                      updateProgress(30 + Math.floor(completedCount * 40 / totalSites), `${totalSites}개 중 ${completedCount}개 사이트 분석 완료`);
-                     return { ...pageInfo, content, status: 'fulfilled' }; // Return original info + content + status
+                     // Enhanced Logging Point 4: Log successful crawl outcome within map
+                     log(`사이트 ${index + 1}/${totalSites} 분석 완료 (성공 또는 최종 실패 메시지 포함): ${pageInfo.link}, 결과 길이: ${content?.length}`);
+                     return { ...pageInfo, content, status: 'fulfilled' };
                  } catch (error) {
-                     // This catch block might be less likely to hit if crawlWebpage handles internal errors
-                     log(`crawlWebpages 내 예외 발생 (사이트 ${pageInfo.link}):`, error);
+                     // This outer catch is less likely now but good as a fallback
+                     // Enhanced Logging Point 4: Log unexpected errors during mapping/Promise handling
+                     log(`crawlWebpages 내 예외 발생 (사이트 ${pageInfo.link}):`, error.message, error.stack);
                      completedCount++;
                      updateProgress(30 + Math.floor(completedCount * 40 / totalSites), `${totalSites}개 중 ${completedCount}개 사이트 분석 완료 (오류 포함)`);
                      return { ...pageInfo, content: `크롤링 중 예상치 못한 오류: ${error.message}`, status: 'rejected' };
                  }
             });
 
-            // Wait for all promises to settle
             const results = await Promise.allSettled(crawlPromises);
-             log('모든 사이트 크롤링/분석 시도 완료');
+             log('모든 사이트 크롤링/분석 시도 완료 (Promise.allSettled 완료)');
             updateProgress(70, '분석 완료, 응답 생성 준비 중...');
 
-             // Process results from Promise.allSettled
-             return results.map(result => {
+             // Process results
+             return results.map((result, index) => { // Add index for logging
                  if (result.status === 'fulfilled') {
-                     return result.value; // Contains { ...pageInfo, content, status: 'fulfilled' }
+                     // Enhanced Logging Point 4: Log fulfilled promise result details
+                     log(`Promise 결과 ${index + 1}: 성공, URL: ${result.value.link}, Status: ${result.value.status}, Content 시작: ${result.value.content?.substring(0, 50)}...`);
+                     return result.value;
                  } else {
-                     // Log the reason for rejection if needed
-                     log("Promise Settled Error:", result.reason);
-                      // Return a structure indicating failure, potentially using info from reason if available
-                      // For simplicity, let's assume the structure from the catch block above is sufficient
-                      // If result.reason contains the structure, use it, otherwise create a generic failure one.
-                      if (result.reason && typeof result.reason === 'object' && result.reason.link) {
-                          return result.reason; // Assume reason contains the error structure
-                      } else {
-                          // Create a generic failure structure - needs link/title/snippet from original input
-                          // This part is tricky without passing the original input here again.
-                           // Let's rely on the structure returned from the map's catch block for now.
-                           // Need to ensure pageInfo is accessible here if the inner catch fails.
-                            // A better pattern might involve Promise.all directly on crawlWebpage calls
-                            // and handling errors in the .then/.catch chain as currently implemented.
-                            // Let's stick with the current Promise.all on the async map function.
-                           log("경고: Promise.allSettled에서 예상치 못한 rejection 구조:", result.reason);
-                           // Returning a placeholder - this needs refinement if errors aren't caught inside the map.
-                            return { link: 'unknown', title: 'Unknown Error', snippet: '', content: `크롤링 실패: ${result.reason}`, status: 'rejected' };
-                      }
-
+                     // Enhanced Logging Point 4: Log rejected promise details more clearly
+                     // result.reason might be the error object or the failure string from crawlWebpage
+                     const reason = result.reason || '알 수 없는 거부 사유';
+                     const errorMessage = reason.message || reason.toString(); // Get message from Error or stringify
+                     log(`Promise 결과 ${index + 1}: 실패. 이유: ${errorMessage}`);
+                     // Attempt to return a consistent error structure if possible
+                     // We need pageInfo here, which isn't directly available in result.reason
+                     // Use the original pagesToCrawl array to get context
+                     const originalPageInfo = pagesToCrawl[index] || { link: 'unknown', title: 'Unknown Error', snippet: '' };
+                     return {
+                         ...originalPageInfo,
+                         content: `크롤링 실패: ${errorMessage}`, // Provide the error message
+                         status: 'rejected'
+                      };
                  }
              });
         }
@@ -705,26 +712,34 @@
             updateProgress(75, 'Gemini 응답 생성 중...');
             log('Gemini 요청 준비 중...');
 
-            // Build context string for Gemini
             let context = '';
-            const validSourcesForPrompt = []; // Track sources actually used in context
+            const validSourcesForPrompt = [];
             processedResults.forEach((result, index) => {
-                // Include content if it's not clearly a failure message and not empty
-                 // Note: We now include snippets prefixed with "[스니펫 요약]"
-                if (result.content && !result.content.startsWith('크롤링 실패') && !result.content.startsWith('크롤링 건너뜀') && !result.content.startsWith('지원하지 않는 콘텐츠 타입')) {
-                    context += `[출처 ${index + 1}: ${result.title}]\n${result.content}\n\n---\n\n`;
-                    validSourcesForPrompt.push({...result, sourceNum: index + 1}); // Store source number
+                const sourceNum = index + 1; // Consistent numbering based on original search results
+                // Include content if crawl was successful OR if it's a snippet fallback
+                const isFailure = result.content?.startsWith('크롤링 실패') || result.content?.startsWith('크롤링 건너뜀') || result.content?.startsWith('지원하지 않는 콘텐츠 타입') || result.content?.startsWith('[정보 없음]');
+                const isSnippetFallback = result.content?.startsWith('[스니펫 요약]');
+
+                if ((!isFailure || isSnippetFallback) && result.content && result.content.trim() !== '') {
+                     // Enhanced Logging Point 4: Log content being added to Gemini context
+                    log(`Gemini 컨텍스트 추가됨 (출처 ${sourceNum}): ${result.title}, 내용 시작: ${result.content.substring(0, 100)}...`);
+                    context += `[출처 ${sourceNum}: ${result.title}]\n${result.content}\n\n---\n\n`;
+                    validSourcesForPrompt.push({...result, sourceNum});
                 } else {
-                    log(`Gemini 컨텍스트에서 제외된 출처 ${index + 1} (${result.title}): 내용 부적절/실패`);
+                    // Enhanced Logging Point 4: Log content *excluded* from Gemini context
+                    log(`Gemini 컨텍스트에서 제외된 출처 ${sourceNum} (${result.title}): ${result.content ? '내용 부적절/실패: ' + result.content.substring(0,100) + '...' : '내용 없음'}`);
+                    // Even excluded sources might be referenced in the final list, keep them with failure status?
+                    // Let's only add successful/snippet sources to validSourcesForPrompt
                 }
             });
 
+
             if (!context) {
-                 log("Gemini 요청 취소: 유효한 컨텍스트 정보 없음 (크롤링/스니펫 모두 실패)");
+                 log("Gemini 요청 취소: 유효한 컨텍스트 정보 없음 (크롤링/스니펫 모두 실패 또는 내용 부적절)");
+                 updateProgress(100, '유효 정보 없음');
                  return "웹사이트에서 관련 정보를 찾거나 분석할 수 없었습니다. 다른 질문을 시도해 보세요.";
             }
 
-            // Gemini API Request Structure
             const systemInstruction = `당신은 제공된 웹 검색 결과(출처)를 바탕으로 사용자 질문에 답변하는 AI 챗봇입니다.
 - 각 출처는 '[출처 번호: 제목]' 형식으로 시작하며, 내용은 전체 웹페이지 텍스트, JSON/XML 데이터 요약, 또는 '[스니펫 요약]'으로 시작하는 짧은 요약일 수 있습니다.
 - 내용을 분석하여 사용자의 질문에 대해 정확하고 상세하게, 한국어로 답변하세요.
@@ -734,40 +749,24 @@
 - 답변 마지막에는 "참고 자료:" 섹션을 만들고, 답변 생성에 '실제로 사용된' 모든 출처의 번호, 제목, 원본 링크를 목록 형식으로 제공하세요. (예: * 출처 1: [제목] - [링크])`;
 
              const requestPayload = {
-                contents: [
-                    { // Combine instructions, question, and context for the first user turn
-                        role: "user",
-                        parts: [{
-                            text: `System Instructions:\n${systemInstruction}\n\n---\n\n사용자 질문:\n${question}\n\n---\n\n웹 검색 결과 (참고 자료):\n${context}`
-                        }]
-                    }
-                    // Add previous conversation turns here if implementing history
-                ],
-                // Safety Settings (Optional but recommended)
+                contents: [{
+                    role: "user",
+                    parts: [{ text: `System Instructions:\n${systemInstruction}\n\n---\n\n사용자 질문:\n${question}\n\n---\n\n웹 검색 결과 (참고 자료):\n${context}` }]
+                }],
                 safetySettings: [
                   { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
                   { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
                   { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
                   { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
                 ],
-                generationConfig: {
-                    temperature: 0.6, // Slightly lower temperature for more factual answers based on context
-                    // maxOutputTokens: 2048, // Limit response length if needed
-                    // topP: 0.9,
-                    // topK: 40
-                }
+                generationConfig: { temperature: 0.6 }
             };
 
-            // Use a recommended Gemini model (e.g., gemini-1.5-flash-latest)
-            const model = "gemini-1.5-flash-latest"; // Or "gemini-pro"
+            const model = "gemini-1.5-flash-latest";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
 
             log('Gemini API 요청 전송:', apiUrl);
-            // Avoid logging the full payload in production due to potentially large context size
-             if (DEBUG) {
-                  // Log a truncated version or just structure keys
-                  // log('Gemini 요청 본문 (일부):', JSON.stringify(requestPayload).substring(0, 500) + '...');
-             }
+            // if (DEBUG) { log('Gemini 요청 본문 (일부):', JSON.stringify(requestPayload).substring(0, 500) + '...'); }
 
             try {
                 const response = await fetch(apiUrl, {
@@ -775,102 +774,87 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(requestPayload)
                 });
-
                 const data = await response.json();
 
-                // Handle API errors
                 if (!response.ok || data.error) {
-                    log('Gemini API 오류 응답:', data);
+                    // Enhanced Logging Point 4
+                    log('Gemini API 오류 응답:', response.status, response.statusText, JSON.stringify(data));
                     throw new Error(`Gemini API 오류: ${data.error ? data.error.message : `HTTP ${response.status}`}`);
                 }
 
-                // Handle safety blocks or empty responses
                 if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) {
                     const feedback = data.promptFeedback || data.candidates?.[0]?.finishReason;
-                    log('Gemini 응답 없음 또는 안전 필터링:', feedback);
+                     // Enhanced Logging Point 4
+                    log('Gemini 응답 없음 또는 안전 필터링:', JSON.stringify(feedback), JSON.stringify(data.candidates?.[0]?.safetyRatings));
                     const reason = data.candidates?.[0]?.finishReason || data.promptFeedback?.blockReason || 'Unknown';
                     let message = `Gemini가 응답을 생성하지 못했습니다. 이유: ${reason}.`;
                     if (data.promptFeedback?.safetyRatings) {
                          message += ` (안전 평가: ${data.promptFeedback.safetyRatings.map(r => `${r.category}: ${r.probability}`).join(', ')})`;
                     }
-                     // Return this specific message instead of throwing an error
                      updateProgress(100, '응답 생성 실패 (필터링)');
-                     return message; // Return the message to be displayed to the user
+                     return message;
                  }
 
 
                 updateProgress(100, '응답 생성 완료');
                 log('Gemini 응답 받음');
-
                 let answer = data.candidates[0].content.parts[0].text;
 
                  // --- Post-processing Gemini Response ---
-
-                 // 1. Link Citations: Replace [출처 N] with actual links
+                 // Link Citations
                  validSourcesForPrompt.forEach(source => {
-                     // Regex to find [출처 N], potentially with spaces or multiple citations like [출처 1][출처 3]
                      const citationRegex = new RegExp(`\\[출처\\s?${source.sourceNum}\\]`, 'g');
                      const sourceLink = `<a href="${escapeHtml(source.link)}" target="_blank" class="source-link" title="${escapeHtml(source.title)}">[출처 ${source.sourceNum}]</a>`;
                      answer = answer.replace(citationRegex, sourceLink);
                  });
 
-                 // 2. Link "참고 자료" List (if generated by Gemini)
-                 // This relies heavily on Gemini following the format instruction.
+                 // Link "참고 자료" List
                  answer = answer.replace(/(\*?\s*출처\s*(\d+)\s*:\s*)(.*?)\s*-\s*(https?:\/\/[^\s<]+)/g, (match, prefix, num, title, link) => {
-                     // Find the corresponding source data
                      const source = validSourcesForPrompt.find(s => s.sourceNum === parseInt(num));
                      if (source) {
-                          // Use the original link from our data for accuracy
                           return `${prefix.trim()} <a href="${escapeHtml(source.link)}" target="_blank" class="source-link">${escapeHtml(title.trim())}</a>`;
                      }
-                     return match; // Return original if source not found
+                     return match;
                  });
-                 // Fallback attempt to link titles if the format is slightly different
+                 // Fallback linking for titles
                  validSourcesForPrompt.forEach(source => {
-                      const titleRegex = new RegExp(`(${escapeHtml(source.title)})`, 'g'); // Escape title for regex
-                      // Only replace if not already inside an <a> tag
+                      const titleRegex = new RegExp(`(${escapeHtml(source.title)})`, 'g');
                       answer = answer.replace(titleRegex, (match, capturedTitle) => {
-                          // Very basic check to avoid nested links
                            const surroundingChars = answer.substring(answer.indexOf(match) - 10, answer.indexOf(match) + match.length + 10);
-                           if (surroundingChars.includes('<a href')) { return capturedTitle; } // Already linked likely
+                           if (surroundingChars.includes('<a href')) { return capturedTitle; }
                            return `<a href="${escapeHtml(source.link)}" target="_blank" class="source-link">${capturedTitle}</a>`;
                       });
                  });
 
-
-                 // 3. Basic Markdown to HTML conversion
-                 answer = answer.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold
-                 answer = answer.replace(/\*(.*?)\*/g, '<em>$1</em>');   // Italics
-                 answer = answer.replace(/`([^`]+)`/g, '<code>$1</code>'); // Inline code
-                 // Convert Markdown headings (basic) - adjust level as needed
+                 // Basic Markdown to HTML
+                 answer = answer.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                 answer = answer.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                 answer = answer.replace(/`([^`]+)`/g, '<code>$1</code>');
                  answer = answer.replace(/^###+\s+(.*)/gm, '<h5>$1</h5>');
                  answer = answer.replace(/^##\s+(.*)/gm, '<h4>$1</h4>');
                  answer = answer.replace(/^#\s+(.*)/gm, '<h3>$1</h3>');
-                 // Convert Markdown lists (basic)
-                  answer = answer.replace(/^\s*[\-\*]\s+(.*)/gm, '<li>$1</li>');
-                  answer = answer.replace(/(<li>.*<\/li>\s*)+/g, '<ul>$&</ul>'); // Wrap consecutive LIs in UL
-                 // Convert newlines to <br> (do this last)
+                 answer = answer.replace(/^\s*[\-\*]\s+(.*)/gm, '<li>$1</li>');
+                 answer = answer.replace(/(<li>.*<\/li>\s*)+/g, '<ul>$&</ul>');
                  answer = answer.replace(/\n/g, '<br>');
-                 // Clean up potential double <br> from list wrapping
-                  answer = answer.replace(/<\/ul><br>/g, '</ul>');
-                  answer = answer.replace(/<br><ul>/g, '<ul>');
-                  answer = answer.replace(/<li><br>/g, '<li>');
-                  answer = answer.replace(/<br><\/li>/g, '</li>');
-
+                 answer = answer.replace(/<\/ul><br>/g, '</ul>');
+                 answer = answer.replace(/<br><ul>/g, '<ul>');
+                 answer = answer.replace(/<li><br>/g, '<li>');
+                 answer = answer.replace(/<br><\/li>/g, '</li>');
 
                  return answer;
 
             } catch (error) {
-                log('Gemini 응답 생성/처리 중 예외 발생:', error);
+                 // Enhanced Logging Point 4
+                log('Gemini 응답 생성/처리 중 예외 발생:', error.message, error.stack);
                 updateProgress(100, '응답 처리 중 오류 발생');
-                // Return the error message to be displayed by the bot
                 return `Gemini 응답 처리 중 오류 발생: ${error.message}`;
             }
         }
 
         // --- Main Message Processing Orchestrator ---
         async function processMessage(message) {
-             setLoadingState(true); // Disable input, show loading
+             addUserMessage(message); // Add user message immediately
+             setLoadingState(true);
 
             try {
                 // 1. Google Search
@@ -879,79 +863,87 @@
                 if (!searchResults || searchResults.length === 0) {
                     addBotMessage('관련 웹페이지를 찾을 수 없습니다. 다른 검색어나 질문을 시도해 보세요.');
                     updateProgress(100, '검색 결과 없음');
-                     setLoadingState(false); // Re-enable input
+                     setLoadingState(false);
                     return;
                 }
-                log("검색 결과:", searchResults.map(r => ({ link: r.link, snippet_exists: !!r.snippet })));
+                log("검색 결과:", searchResults.map(r => ({ link: r.link, title: r.title, snippet_exists: !!r.snippet })));
 
-                // 2. Crawl Webpages (passing snippets)
+                // 2. Crawl Webpages
                 updateLoadingMessage('웹페이지 정보 분석 중...');
                 const pagesToCrawl = searchResults.map(r => ({
                     link: r.link,
                     title: r.title,
-                    snippet: r.snippet // Pass snippet
+                    snippet: r.snippet
                 }));
-                const crawledResultsWithOriginalData = await crawlWebpages(pagesToCrawl);
+                const crawledResults = await crawlWebpages(pagesToCrawl); // Results now include status and original data
 
-                // 3. Apply Snippet Fallback Logic
+                // 3. Apply Snippet Fallback & Prepare for Gemini
                 updateLoadingMessage('분석 결과 정리 중...');
-                const resultsForGemini = crawledResultsWithOriginalData.map((result, index) => {
-                    const crawlFailed = !result.content || result.content.startsWith('크롤링 실패') || result.content.startsWith('크롤링 건너뜀') || result.content.startsWith('지원하지 않는 콘텐츠 타입');
-                    if (crawlFailed && result.snippet && result.snippet.trim() !== '') {
-                        log(`크롤링 실패/건너뜀, 스니펫 사용: ${result.title}`);
-                        return { ...result, content: `[스니펫 요약] ${result.snippet}`, sourceNum: index + 1 }; // Add sourceNum here
+                const resultsForGemini = crawledResults.map((result, index) => {
+                    // Check if crawling failed based on common failure messages
+                    const crawlFailed = result.status === 'rejected' || result.content?.startsWith('크롤링 실패') || result.content?.startsWith('크롤링 건너뜀') || result.content?.startsWith('지원하지 않는 콘텐츠 타입');
+                    const hasSnippet = result.snippet && result.snippet.trim() !== '';
+
+                    if (crawlFailed && hasSnippet) {
+                        log(`크롤링 실패/건너뜀, 스니펫 사용: ${result.title} (URL: ${result.link})`);
+                        // Keep original data, replace content with snippet fallback
+                        return { ...result, content: `[스니펫 요약] ${result.snippet}`, status: 'fulfilled_with_snippet' }; // Mark status for clarity
                     } else if (crawlFailed) {
-                        log(`크롤링 실패/건너뜀/부적합, 스니펫 없음: ${result.title}`);
-                        // Keep the failure message for context, or mark explicitly unusable
-                        return { ...result, content: `[정보 없음] ${result.content}`, sourceNum: index + 1 }; // Mark as unusable but keep for numbering consistency
+                        log(`크롤링 실패/부적합, 스니펫 없음: ${result.title} (URL: ${result.link})`);
+                        // Mark as unusable, keep failure message in content for potential debugging/logging
+                         return { ...result, content: `[정보 없음] ${result.content || '크롤링 실패'}`, status: 'rejected_no_snippet' };
                     } else {
-                         // Crawl successful
-                        return { ...result, sourceNum: index + 1 }; // Add sourceNum
+                         // Crawl successful (or content was extracted even if short)
+                         return result; // Already has status: 'fulfilled'
                     }
-                });
-                log("Gemini에게 전달할 최종 컨텐츠 개수:", resultsForGemini.length);
+                }).map((result, index) => ({ ...result, sourceNum: index + 1 })); // Add sourceNum consistently at the end
+
+                log("Gemini에게 전달할 최종 컨텐츠 후보 개수:", resultsForGemini.length);
 
 
                 // 4. Get Gemini Response
-                if (resultsForGemini.length > 0) {
+                // Filter out results explicitly marked as unusable before sending to Gemini
+                 const usableResultsForGemini = resultsForGemini.filter(r => r.status !== 'rejected_no_snippet');
+
+                if (usableResultsForGemini.length > 0) {
                     updateLoadingMessage('Gemini 응답 생성 중...');
-                    const geminiResponse = await getGeminiResponse(message, resultsForGemini);
+                    const geminiResponse = await getGeminiResponse(message, usableResultsForGemini);
 
-                     removeLoadingMessage(); // Remove loading indicator *before* adding final response
-                    const botMsgElement = addBotMessage(geminiResponse, true); // Render response as HTML
+                     removeLoadingMessage();
+                    const botMsgElement = addBotMessage(geminiResponse, true);
 
-                    // 5. Append Original Search Results List (Optional)
+                    // 5. Append Original Search Results List
                     const sourcesDiv = document.createElement('div');
                     sourcesDiv.className = 'mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 no-print';
+                    // Use the *original* searchResults array for this list
                     let sourcesHtml = '<p class="font-medium mb-2">참고한 원본 검색 결과:</p><ul class="list-disc list-inside space-y-1">';
                     searchResults.forEach((result, index) => {
-                         // Use original search results here
                         sourcesHtml += `<li>(${index + 1}) <a href="${escapeHtml(result.link)}" target="_blank" class="source-link hover:underline" title="${escapeHtml(result.snippet)}">${escapeHtml(result.title)}</a></li>`;
                     });
                     sourcesHtml += '</ul>';
                     sourcesDiv.innerHTML = sourcesHtml;
 
-                    // Append sources to the last bot message element if it exists
                     if (botMsgElement) {
                          botMsgElement.appendChild(sourcesDiv);
-                         scrollToBottom(); // Scroll again after adding sources
+                         scrollToBottom();
                     }
 
                 } else {
-                    // Should be rare now, only if search finds nothing initially
+                    // This happens if search succeeded but ALL crawls failed AND had no snippets
                      removeLoadingMessage();
-                    addBotMessage('관련 정보를 찾거나 처리할 수 없습니다.');
+                    log("처리 가능한 유효 정보 없음 (모든 크롤링/스니펫 실패)");
+                    addBotMessage('웹사이트 정보를 분석하는 데 실패했고, 사용할 수 있는 요약 정보도 없습니다. 다른 질문을 시도해 보세요.');
                     updateProgress(100, '처리할 내용 없음');
                 }
 
             } catch (error) {
-                log('전체 처리 중 오류 발생:', error);
-                 removeLoadingMessage(); // Ensure loading is removed on error
+                 // Enhanced Logging Point 4: Log top-level processing errors
+                log('전체 처리 중 오류 발생:', error.message, error.stack);
+                 removeLoadingMessage();
                 addBotMessage(`처리 중 오류가 발생했습니다: ${error.message}`);
-                updateProgress(100, '오류 발생'); // Ensure progress completes on error
+                updateProgress(100, '오류 발생');
             } finally {
-                 setLoadingState(false); // Re-enable input fields regardless of success/failure
-                 // Ensure progress bar hides eventually
+                 setLoadingState(false);
                  if (progressBar.style.width !== '100%') {
                       setTimeout(() => updateProgress(100, progressStatus.textContent || '완료'), 200);
                  }
@@ -961,23 +953,24 @@
         // --- Event Listeners ---
         sendButton.addEventListener('click', () => {
             const message = userInput.value.trim();
-            if (message && !sendButton.disabled) { // Check if not already processing
+            if (message && !sendButton.disabled) {
                 userInput.value = '';
                 userInput.focus();
+                // Don't add user message here, add it inside processMessage start
                 processMessage(message);
             }
         });
 
         userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) { // Check if not disabled
-                e.preventDefault(); // Prevent default newline on Enter
+            if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) {
+                e.preventDefault();
                 sendButton.click();
             }
         });
 
         // --- Initialization ---
-        log("챗봇 초기화 완료. API 키 로드됨 (config.js).");
-        userInput.focus(); // Focus input field on load
+        log("챗봇 초기화 완료. 프록시 쿨다운 및 상세 로깅 적용됨.");
+        userInput.focus();
 
     </script>
 </body>
