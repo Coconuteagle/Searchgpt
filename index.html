@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>검색 기반 Gemini 챗봇</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
+    <script src="config.js"></script>
+    <style>
+        /* CSS styles remain the same */
+        body {
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .dark {
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+        .chat-container {
+            height: calc(100vh - 180px);
+            min-height: 400px;
+        }
+        .user-message {
+            background-color: #e3f2fd;
+            border-radius: 18px 18px 2px 18px;
+        }
+        .bot-message {
+            background-color: #f1f1f1;
+            border-radius: 18px 18px 18px 2px;
+        }
+        .dark .user-message {
+            background-color: #2d3748;
+        }
+        .dark .bot-message {
+            background-color: #4a5568;
+        }
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        .progress-bar {
+            height: 100%;
+            border-radius: 4px;
+            width: 0%;
+            background-color: #4299e1;
+            transition: width 0.3s;
+        }
+        .dark .progress-container {
+            background-color: #2d3748;
+        }
+        .source-link {
+            color: #3182ce;
+            text-decoration: underline;
+        }
+        .dark .source-link {
+            color: #90cdf4;
+        }
+        .ellipsis {
+            display: inline-block;
+            width: 60px;
+            text-align: left;
+        }
+        .typing-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: currentColor;
+            margin-right: 4px;
+            animation: typing 1s infinite;
+        }
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes typing {
+            0%, 100% { opacity: 0.3; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-2px); }
+        }
+        .progress-status {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #718096;
+        }
+        .dark .progress-status {
+            color: #a0aec0;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-break {
+                page-break-before: always;
+            }
+            .chat-container {
+                height: auto;
+                max-height: none;
+                overflow: visible;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <div class="flex justify-between items-center mb-6">
+             <h1 class="text-3xl font-bold text-gray-800 dark:text-white">검색 기반 Gemini 챗봇</h1>
+            <div class="flex space-x-4">
+                <button id="theme-toggle" class="px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-500">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="chat-box" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+            <div id="chat-messages" class="chat-container p-4 overflow-y-auto space-y-4">
+                <div class="bot-message p-4 text-gray-800 dark:text-gray-200 max-w-3xl mx-auto">
+                     <p>안녕하세요! 검색 기반 Gemini 챗봇입니다. 궁금한 점이 있으시면 질문해주세요. 제가 구글 검색을 통해 정보를 찾아 답변해 드리겠습니다.</p>
+                </div>
+            </div>
+
+            <div id="chat-form" class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                <div class="max-w-3xl mx-auto">
+                    <div id="progress-section" class="mb-3 hidden">
+                        <div id="progress-status" class="progress-status"></div>
+                        <div class="progress-container">
+                            <div id="progress-bar" class="progress-bar"></div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <input type="text" id="user-input" class="flex-grow px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" placeholder="질문을 입력하세요...">
+                        <button id="send-button" class="px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 text-sm text-gray-600 dark:text-gray-400 text-center">
+             <p>© 2023 검색 기반 Gemini 챗봇</p>
+        </div>
+    </div>
+
+    <script>
+        // 디버깅 로그 함수
+        const DEBUG = true;
+        function log(...args) {
+            if (DEBUG) {
+                console.log('[챗봇 로그]', ...args);
+            }
+        }
+
+        // --- REMOVED API KEY CONSTANTS AND LOCALSTORAGE ---
+        // API Keys are now loaded from config.js into the global `apiKeys` object
+
+        // 다크 모드 토글 (No changes needed)
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const body = document.body;
+        if (localStorage.getItem('dark-mode') === 'true') {
+            body.classList.add('dark');
+            themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+        themeToggleBtn.addEventListener('click', () => {
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+                localStorage.setItem('dark-mode', 'false');
+            } else {
+                body.classList.add('dark');
+                themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+                localStorage.setItem('dark-mode', 'true');
+            }
+        });
+
+        // 캐시 시스템 구현 (No changes needed)
+        const cache = {
+            search: new Map(),
+            crawl: new Map(),
+            maxAge: 30 * 60 * 1000, // 30분
+            getSearch(query) { /* ... */ },
+            setSearch(query, data) { /* ... */ },
+            getCrawl(url) { /* ... */ },
+            setCrawl(url, data) { /* ... */ }
+        };
+        // --- Cache functions implementation (kept as is) ---
+        cache.getSearch = function(query) {
+            const cacheItem = this.search.get(query);
+            if (cacheItem && (Date.now() - cacheItem.timestamp < this.maxAge)) {
+                log('검색 캐시 히트:', query);
+                return cacheItem.data;
+            }
+            log('검색 캐시 미스:', query);
+            return null;
+        };
+        cache.setSearch = function(query, data) {
+            this.search.set(query, { data, timestamp: Date.now() });
+            log('검색 캐시 저장:', query);
+        };
+        cache.getCrawl = function(url) {
+            const cacheItem = this.crawl.get(url);
+            if (cacheItem && (Date.now() - cacheItem.timestamp < this.maxAge)) {
+                log('크롤링 캐시 히트:', url);
+                return cacheItem.data;
+            }
+            log('크롤링 캐시 미스:', url);
+            return null;
+        };
+        cache.setCrawl = function(url, data) {
+            this.crawl.set(url, { data, timestamp: Date.now() });
+            log('크롤링 캐시 저장:', url);
+        };
+        // --- End Cache functions ---
+
+
+        // 채팅 기능 UI (No changes needed)
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const progressSection = document.getElementById('progress-section');
+        const progressBar = document.getElementById('progress-bar');
+        const progressStatus = document.getElementById('progress-status');
+
+        function addUserMessage(message) { /* ... */ }
+        function addBotMessage(message, isHTML = false) { /* ... */ }
+        function addLoadingMessage() { /* ... */ }
+        function updateLoadingMessage(message) { /* ... */ }
+        function removeLoadingMessage() { /* ... */ }
+        function updateProgress(percent, statusText) { /* ... */ }
+        function escapeHtml(text) { /* ... */ }
+        // --- UI functions implementation (kept as is) ---
+         function addUserMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'user-message p-4 text-gray-800 dark:text-gray-200 ml-auto max-w-3xl';
+            messageDiv.innerHTML = `<p>${escapeHtml(message)}</p>`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        function addBotMessage(message, isHTML = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'bot-message p-4 text-gray-800 dark:text-gray-200 max-w-3xl';
+            if (isHTML) {
+                messageDiv.innerHTML = message;
+            } else {
+                messageDiv.innerHTML = `<p>${escapeHtml(message)}</p>`;
+            }
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return messageDiv;
+        }
+       function addLoadingMessage() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'bot-message p-4 text-gray-800 dark:text-gray-200 max-w-3xl';
+            messageDiv.id = 'loading-message';
+            const loadingSpan = document.createElement('span');
+            loadingSpan.className = 'ellipsis';
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('span');
+                dot.className = 'typing-dot';
+                loadingSpan.appendChild(dot);
+            }
+            messageDiv.appendChild(loadingSpan);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return messageDiv;
+        }
+        function updateLoadingMessage(message) {
+            const loadingMessage = document.getElementById('loading-message');
+            if (loadingMessage) {
+                const loadingSpan = loadingMessage.querySelector('.ellipsis');
+                if (loadingSpan) {
+                     loadingMessage.innerHTML = `<p>${escapeHtml(message)} `; // Add space before ellipsis
+                     loadingMessage.appendChild(loadingSpan); // Re-append ellipsis
+                } else {
+                    // Fallback if ellipsis somehow got removed
+                     messageDiv.innerHTML = `<p>${escapeHtml(message)}</p>`;
+                }
+            }
+        }
+        function removeLoadingMessage() {
+            const loadingMessage = document.getElementById('loading-message');
+            if (loadingMessage) {
+                loadingMessage.remove();
+            }
+        }
+        function updateProgress(percent, statusText) {
+            progressBar.style.width = `${percent}%`;
+            progressStatus.textContent = statusText;
+            if (percent > 0) {
+                progressSection.classList.remove('hidden');
+            }
+            if (percent >= 100) {
+                setTimeout(() => {
+                    progressSection.classList.add('hidden');
+                    progressBar.style.width = '0%';
+                    progressStatus.textContent = ''; // Clear status text
+                }, 1000);
+            }
+        }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        // --- End UI functions ---
+
+        // 구글 검색 함수 (Modified to use apiKeys from config.js)
+        async function googleSearch(query) {
+            // *** Use keys from config.js ***
+            const googleApiKey = apiKeys.GOOGLE_API_KEY;
+            const searchEngineId = apiKeys.SEARCH_ENGINE_ID;
+
+            if (!googleApiKey || !searchEngineId) {
+                 throw new Error("Google Search API Key or Search Engine ID is missing in config.js");
+            }
+
+            updateProgress(10, '구글 검색 중...');
+            const cachedResults = cache.getSearch(query);
+            if (cachedResults) {
+                updateProgress(20, '캐시된 검색 결과 사용 중...');
+                return cachedResults;
+            }
+
+            try {
+                const response = await fetch(`https://www.googleapis.com/customsearch/v1?key=${googleApiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    log('구글 검색 API 오류:', data.error);
+                    throw new Error(`구글 검색 API 오류: ${data.error.message}`);
+                }
+                updateProgress(20, '검색 결과 처리 중...');
+                if (!data.items || data.items.length === 0) {
+                    return [];
+                }
+                const results = data.items.slice(0, 8).map(item => ({
+                    title: item.title,
+                    link: item.link,
+                    snippet: item.snippet,
+                    pagemap: item.pagemap
+                }));
+                cache.setSearch(query, results);
+                return results;
+            } catch (error) {
+                log('구글 검색 오류:', error);
+                throw error;
+            }
+        }
+
+        // 다중 프록시 서비스 (No changes needed)
+        const proxies = [
+             { name: 'allorigins', url: (targetUrl) => `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, active: true },
+             { name: 'corsproxy', url: (targetUrl) => `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, active: true },
+             // Note: cors-anywhere often requires a demo server button press or might be down
+             // { name: 'corsanywhere', url: (targetUrl) => `https://cors-anywhere.herokuapp.com/${targetUrl}`, active: true }
+        ];
+
+
+        // 웹페이지 크롤링 함수 (No significant changes needed, kept implementation)
+        async function crawlWebpage(url, retryCount = 0) { /* ... */ }
+        // --- Crawl function implementation (kept as is) ---
+        async function crawlWebpage(url, retryCount = 0) {
+            const cachedContent = cache.getCrawl(url);
+            if (cachedContent) {
+                return cachedContent;
+            }
+            const maxRetries = proxies.filter(p => p.active).length > 0 ? proxies.filter(p => p.active).length : 1; // Max retries = number of active proxies
+
+            const activeProxies = proxies.filter(p => p.active);
+             if (activeProxies.length === 0) {
+                 log("크롤링 실패: 활성화된 프록시 없음", url);
+                 return `크롤링 실패 (활성 프록시 없음): ${url}`; // Indicate failure reason
+             }
+
+             // Use modulo for proxy rotation, ensuring it doesn't exceed active proxies count
+             const proxyIndex = retryCount % activeProxies.length;
+             const proxy = activeProxies[proxyIndex];
+
+
+            try {
+                if (!url || !url.startsWith('http')) {
+                    throw new Error(`유효하지 않은 URL: ${url}`);
+                }
+                const fileExtension = url.split('?')[0].split('.').pop().toLowerCase();
+                const nonHtmlExtensions = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'zip', 'rar', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'mp3', 'mp4', 'avi', 'mov'];
+                if (nonHtmlExtensions.includes(fileExtension)) {
+                    return `${fileExtension.toUpperCase()} 파일 형식은 내용을 직접 추출하기 어렵습니다. URL: ${url}`;
+                }
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    controller.abort();
+                    log(`[${proxy.name}] 타임아웃: ${url}`);
+                 }, 15000); // 15초 타임아웃
+
+                const proxyUrl = proxy.url(url);
+                const headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36', // Updated UA
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
+                };
+
+                log(`[${proxy.name}] 크롤링 시도 (${retryCount + 1}/${maxRetries}):`, url);
+                const response = await fetch(proxyUrl, { signal: controller.signal, headers: headers, mode: 'cors' }); // mode: 'cors' is often necessary with proxies
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    // Check for specific informative errors from proxies if possible
+                    let errorBody = '';
+                    try { errorBody = await response.text(); } catch (_) {}
+                     log(`[${proxy.name}] HTTP 오류 ${response.status} (${response.statusText}) 응답: ${errorBody.substring(0, 100)}...`);
+                    throw new Error(`HTTP 오류 ${response.status} (${response.statusText})`);
+                }
+
+                const contentType = response.headers.get('content-type') || '';
+                 if (!contentType.includes('text/html') && !contentType.includes('application/xhtml+xml') && !contentType.includes('text/plain')) {
+                     if (contentType.includes('application/json')) {
+                         try {
+                             const json = await response.json();
+                             const textContent = JSON.stringify(json, null, 2).substring(0, 5000);
+                             cache.setCrawl(url, textContent);
+                             return textContent;
+                         } catch (e) { return `JSON 파싱 오류. Content-Type: ${contentType}, URL: ${url}`; }
+                     } else {
+                         return `HTML/텍스트가 아닌 콘텐츠 타입 (${contentType}). URL: ${url}`;
+                     }
+                 }
+
+
+                const html = await response.text();
+                if (!html || html.trim().length === 0) {
+                    throw new Error('빈 응답 또는 내용 없음');
+                }
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const title = doc.querySelector('title')?.textContent.trim() || url;
+                const metaDescription = doc.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() || '';
+
+                // Improved cleanup
+                const elementsToRemove = ['script', 'style', 'svg', 'img', 'video', 'audio', 'iframe', 'nav', 'header', 'footer', 'aside', 'form', 'noscript', '.ad', '#ad', '[class*="advert"]', '[id*="advert"]', 'button', 'input', 'select', 'textarea'];
+                elementsToRemove.forEach(selector => {
+                    doc.querySelectorAll(selector).forEach(el => el.remove());
+                });
+
+                // Attempt to find main content area more robustly
+                 let mainContent = doc.querySelector('main') ||
+                                  doc.querySelector('article') ||
+                                  doc.querySelector('[role="main"]') ||
+                                  doc.querySelector('.content, .main-content, .post-content, .entry-content, #content, #main, .article-body, .entry'); // Added more common selectors
+
+                if (!mainContent) mainContent = doc.body; // Fallback to body
+
+                 // Improved text extraction logic
+                 let text = '';
+                 const nodeIterator = doc.createNodeIterator(mainContent, NodeFilter.SHOW_TEXT, null);
+                 let currentNode;
+                 while (currentNode = nodeIterator.nextNode()) {
+                     const parentTag = currentNode.parentElement?.tagName.toLowerCase();
+                     // Ignore text inside likely non-content tags even if not removed (e.g., <button> text)
+                     if (parentTag && ['script', 'style', 'button', 'nav', 'footer', 'header', 'select', 'option'].includes(parentTag)) {
+                         continue;
+                     }
+                     const trimmedText = currentNode.nodeValue.trim();
+                     if (trimmedText) {
+                         // Add space between text nodes, use newline for block elements
+                          const displayStyle = currentNode.parentElement ? window.getComputedStyle(currentNode.parentElement).display : 'inline';
+                         if (['block', 'list-item', 'table-cell'].includes(displayStyle) && text.length > 0 && !text.endsWith('\n')) {
+                             text += '\n' + trimmedText + ' ';
+                         } else {
+                              text += trimmedText + ' ';
+                         }
+                     }
+                 }
+
+
+                text = `제목: ${title}\n설명: ${metaDescription}\n\n${text}`;
+                text = text.replace(/(\s*\n\s*){3,}/g, '\n\n') // Reduce multiple blank lines
+                           .replace(/ {2,}/g, ' ') // Reduce multiple spaces
+                           .trim();
+
+                if (text.length > 8000) { // Keep length limit
+                    text = text.substring(0, 8000) + '... [내용 축약됨]';
+                }
+
+                if (!text || text.length < 50) { // Check if extracted text is meaningful
+                    log(`[${proxy.name}] 내용 추출 부족: ${url}, 길이: ${text.length}`);
+                    // Don't throw error here, let Gemini decide if it's usable, but cache it
+                } else {
+                    log('크롤링 완료:', url, '길이:', text.length);
+                }
+
+                cache.setCrawl(url, text);
+                return text;
+
+            } catch (error) {
+                log(`[${proxy.name}] '${url}' 크롤링 오류 (${retryCount + 1}/${maxRetries}):`, error.message);
+
+                 // Deactivate failing proxy *only if* there are others left and retries remain
+                 if (error.name !== 'AbortError' && activeProxies.length > 1 && retryCount < maxRetries -1) { // Don't deactivate on timeout or last retry
+                    proxy.active = false;
+                    log(`${proxy.name} 프록시 비활성화됨`);
+                }
+
+                 if (retryCount >= maxRetries -1) { // Check if it was the last retry attempt
+                     log("크롤링 최대 재시도 도달:", url);
+                     // Reactivate all proxies for the next *different* URL crawl
+                     proxies.forEach(p => p.active = true);
+                     return `크롤링 실패 (최대 재시도): ${url}, 마지막 오류: ${error.message}`;
+                 } else {
+                     log(`다른 프록시로 재시도...`);
+                     // Ensure all proxies are active before the *next* retry call for this URL
+                     proxies.forEach(p => p.active = true);
+                     return crawlWebpage(url, retryCount + 1); // Recursively retry
+                 }
+            }
+        }
+         // --- End Crawl function ---
+
+
+        // 병렬 크롤링 함수 (No changes needed)
+        async function crawlWebpages(searchResults) {
+            updateProgress(30, '웹페이지 크롤링 중...');
+            try {
+                const totalSites = searchResults.length;
+                log(`${totalSites}개 사이트 크롤링 시작`);
+                const crawlPromises = searchResults.map((result, index) => {
+                    return crawlWebpage(result.link).then(content => {
+                        const currentProgress = 30 + Math.floor((index + 1) * 40 / totalSites);
+                        updateProgress(currentProgress, `${totalSites}개 중 ${index + 1}개 사이트 크롤링 완료`);
+                        return { ...result, content }; // Include original result data
+                    }).catch(error => {
+                        // Handle individual crawl errors gracefully if needed,
+                        // maybe return null content or an error message
+                        log(`개별 크롤링 실패: ${result.link}`, error);
+                        return { ...result, content: `크롤링 실패: ${error.message || '알 수 없는 오류'}` };
+                    });
+                });
+                 const results = await Promise.all(crawlPromises);
+                log('모든 사이트 크롤링 완료');
+                updateProgress(70, '크롤링 완료, 응답 생성 준비 중...'); // Update progress after crawling
+                return results;
+            } catch (error) {
+                log('병렬 크롤링 중 오류:', error);
+                // Propagate the error or handle it (e.g., return empty results)
+                 updateProgress(100, '크롤링 중 오류 발생'); // Indicate error in progress
+                 addBotMessage(`웹페이지 정보 수집 중 오류 발생: ${error.message}`);
+                throw error; // Re-throw to be caught by processMessage
+            }
+        }
+
+
+        // --- *** MODIFIED: Gemini 응답 함수 *** ---
+        async function getGeminiResponse(question, crawledResults) {
+            // *** Use Gemini key from config.js ***
+            const geminiApiKey = apiKeys.GEMINI_API_KEY;
+            if (!geminiApiKey) {
+                throw new Error("Gemini API Key is missing in config.js");
+            }
+
+            updateProgress(80, 'Gemini 응답 생성 중...');
+            log('Gemini 요청 준비 중...');
+
+            try {
+                let context = '';
+                const validSources = []; // Keep track of sources used in context
+                crawledResults.forEach((result, index) => {
+                    // Basic check to avoid adding completely failed crawls to context
+                    if (result.content && !result.content.startsWith('크롤링 실패')) {
+                        context += `[출처 ${index + 1}: ${result.title}]\n${result.content}\n\n`;
+                        validSources.push(result); // Add to list of sources actually used
+                    } else {
+                        log(`제외된 출처 ${index + 1} (${result.title}): 크롤링 실패 또는 내용 없음`);
+                    }
+                });
+
+                if (!context) {
+                     log("Gemini 요청 취소: 유효한 크롤링 결과 없음");
+                     return "웹페이지에서 관련 정보를 찾지 못했습니다. 다른 질문을 시도해 보세요.";
+                }
+
+
+                // Gemini API Structure
+                const systemInstruction = `당신은 웹 검색 결과를 활용하는 지식 정보 챗봇입니다. 제공된 검색 결과(출처)를 바탕으로 사용자의 질문에 대해 정확하고 상세하게 한국어로 답변해야 합니다.
+정보가 충분하지 않거나 검색 결과에 내용이 없다면, 솔직하게 정보가 부족하거나 찾을 수 없다고 답변하세요.
+답변 내용 중 검색 결과를 참고한 부분에는 반드시 '[출처 번호]' 형식으로 명확하게 인용 표시를 해주세요.
+답변 마지막에는 "참고 자료:" 섹션을 만들고, 답변 생성에 실제로 사용된 모든 출처의 제목과 원본 링크를 목록으로 제공하세요. (예: 출처 1: [제목] - [링크])`;
+
+                const requestPayload = {
+                    // system_instruction: { // More recent models support this structure
+                    //     parts: [{ text: systemInstruction }]
+                    // },
+                    contents: [
+                        // Gemini requires user/model turns. We combine system+context+question for the first user turn.
+                        {
+                            role: "user",
+                            parts: [{
+                                text: `System Instructions:\n${systemInstruction}\n\n---\n\n사용자 질문:\n${question}\n\n---\n\n웹 검색 결과 (참고 자료):\n${context}`
+                            }]
+                        }
+                    ],
+                    // Optional: Add safety settings if needed
+                    // safetySettings: [
+                    //   { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                    //   { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                    //   { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                    //   { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                    // ],
+                    generationConfig: {
+                        temperature: 0.7, // Adjust creativity/factuality
+                        // topP: 0.9, // Consider adding nucleus sampling
+                        // topK: 40, // Consider adding top-k sampling
+                        // maxOutputTokens: 1024 // Limit response length if needed
+                    }
+                };
+
+                // Choose a model - gemini-1.5-flash-latest is often faster and cheaper
+                 const model = "gemini-1.5-flash-latest"; // or "gemini-pro"
+                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
+
+                log('Gemini API 요청 전송:', apiUrl);
+                // log('Gemini 요청 본문:', JSON.stringify(requestPayload, null, 2)); // Careful logging potentially large context
+
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestPayload)
+                });
+
+                const data = await response.json();
+
+                 // Check for API-level errors first
+                 if (!response.ok || data.error) {
+                    log('Gemini API 오류 응답:', data);
+                    throw new Error(`Gemini API 오류: ${data.error ? data.error.message : `HTTP ${response.status}`}`);
+                 }
+
+                 // Check for content generation errors (e.g., safety blocks)
+                 if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) {
+                    log('Gemini 응답 없음 또는 안전 필터링:', data.promptFeedback);
+                     const blockReason = data.promptFeedback?.blockReason;
+                     const safetyRatings = data.promptFeedback?.safetyRatings?.map(r => `${r.category}: ${r.probability}`).join(', ');
+                     throw new Error(`Gemini가 응답을 생성하지 못했습니다. ${blockReason ? `이유: ${blockReason}` : ''} ${safetyRatings ? `(안전 평가: ${safetyRatings})` : ''}`);
+                 }
+
+
+                updateProgress(100, '응답 생성 완료');
+                log('Gemini 응답 받음');
+
+                let answer = data.candidates[0].content.parts[0].text;
+
+                // Re-process source links based on the actual text generated by Gemini
+                // This assumes Gemini follows the instruction to use [출처 N] format.
+                crawledResults.forEach((result, index) => {
+                    const sourceNumber = index + 1;
+                    const sourceRegex = new RegExp(`\\[출처\\s?${sourceNumber}\\]`, 'g'); // Allow optional space: [출처 1] or [출처1]
+                    const sourceLink = `<a href="${result.link}" target="_blank" class="source-link">[출처 ${sourceNumber}]</a>`;
+
+                    // Replace citation markers in the main body
+                    answer = answer.replace(sourceRegex, sourceLink);
+
+                    // Attempt to link sources in the "참고 자료" list (if Gemini included it as instructed)
+                    // This regex is more flexible, looking for patterns like "출처 1:", "1.", "[1]", etc. followed by the title
+                    const sourceListRegex = new RegExp(`(?:출처\\s?${sourceNumber}\\s?:?|\\*?\\s?${sourceNumber}\\.\\s?|\\[${sourceNumber}\\]\\s?:?)\\s*${result.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'gi'); // Escape title for regex
+                    answer = answer.replace(sourceListRegex, (match) => {
+                         // Check if already linked to avoid double linking
+                         if (!match.includes('<a href=')) {
+                             return match.replace(result.title, `<a href="${result.link}" target="_blank" class="source-link">${result.title}</a>`);
+                         }
+                         return match; // Already linked, return original match
+                    });
+
+                    // Fallback: If the title wasn't found exactly, try linking based on just "출처 N: <some text>"
+                    const fallbackListRegex = new RegExp(`(출처\\s?${sourceNumber}\\s?:\\s*)([^<\\n]+)`, 'g');
+                    answer = answer.replace(fallbackListRegex, (match, prefix, text) => {
+                         if (!match.includes('<a href=')) {
+                             return `${prefix}<a href="${result.link}" target="_blank" class="source-link">${text.trim()}</a>`;
+                         }
+                         return match;
+                    });
+
+                });
+
+
+                 // Replace Markdown bold/italics with HTML tags for rendering
+                 answer = answer.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold
+                 answer = answer.replace(/\*(.*?)\*/g, '<em>$1</em>');   // Italics
+                 answer = answer.replace(/`([^`]+)`/g, '<code>$1</code>'); // Inline code
+                 answer = answer.replace(/^#+\s+(.*)/gm, '<h4>$1</h4>'); // Basic heading conversion
+                 answer = answer.replace(/\n/g, '<br>'); // Convert newlines to <br> for HTML display
+
+                return answer;
+
+            } catch (error) {
+                log('Gemini 응답 생성/처리 오류:', error);
+                updateProgress(100, '응답 생성 중 오류 발생'); // Indicate error
+                // Don't throw here, return the error message to be displayed by the bot
+                return `Gemini 응답 처리 중 오류 발생: ${error.message}`;
+            }
+        }
+        // --- *** END MODIFIED FUNCTION *** ---
+
+        // 메시지 처리 함수 (Modified to call getGeminiResponse)
+        async function processMessage(message) {
+            addUserMessage(message);
+            const loadingMessage = addLoadingMessage(); // Show loading immediately
+             updateProgress(0, '시작 중...'); // Reset progress
+
+            try {
+                // 1. Google Search
+                updateLoadingMessage('구글 검색 중...');
+                const searchResults = await googleSearch(message);
+                if (!searchResults || searchResults.length === 0) {
+                    removeLoadingMessage();
+                    addBotMessage('관련 웹페이지를 찾을 수 없습니다. 다른 검색어나 질문을 시도해 보세요.');
+                    updateProgress(100, '검색 결과 없음');
+                    return;
+                }
+                log("검색 결과:", searchResults.map(r => r.link));
+
+                // 2. Crawl Webpages
+                updateLoadingMessage('웹페이지 정보 추출 중...');
+                // Pass only the necessary info for crawling
+                const pagesToCrawl = searchResults.map(r => ({ link: r.link, title: r.title }));
+                const crawledResults = await crawlWebpages(pagesToCrawl);
+                 // Filter out results that completely failed crawling before sending to Gemini
+                 const validCrawledResults = crawledResults.filter(r => r.content && !r.content.startsWith('크롤링 실패'));
+                log("크롤링 결과 (유효한 것만):", validCrawledResults.length, "개");
+
+
+                // 3. Get Gemini Response
+                if (validCrawledResults.length > 0) {
+                     updateLoadingMessage('Gemini 응답 생성 중...');
+                     const geminiResponse = await getGeminiResponse(message, validCrawledResults); // Pass only valid results
+                     removeLoadingMessage();
+                     addBotMessage(geminiResponse, true); // Render response as HTML
+                 } else {
+                     // Handle case where all crawls failed
+                     removeLoadingMessage();
+                     addBotMessage('웹페이지 내용을 가져오는 데 실패했습니다. 네트워크 문제거나 페이지 접근이 제한되었을 수 있습니다.');
+                     updateProgress(100, '크롤링 실패');
+                 }
+
+
+                // 4. Display Original Search Results (Optional, maybe show only if Gemini response was successful)
+                const sourcesDiv = document.createElement('div');
+                sourcesDiv.className = 'mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 no-print'; // Add no-print
+                let sourcesHtml = '<p class="font-medium mb-2">참고한 원본 검색 결과:</p><ul class="list-disc list-inside space-y-1">';
+                searchResults.forEach((result) => { // Iterate original search results
+                    sourcesHtml += `<li><a href="${result.link}" target="_blank" class="source-link hover:underline">${escapeHtml(result.title)}</a></li>`;
+                });
+                sourcesHtml += '</ul>';
+                sourcesDiv.innerHTML = sourcesHtml;
+
+                // Append sources to the last bot message element
+                const lastMessageElement = chatMessages.querySelector('.bot-message:last-child');
+                 if(lastMessageElement) {
+                     lastMessageElement.appendChild(sourcesDiv);
+                 } else {
+                    // Fallback if last message couldn't be found (shouldn't happen often)
+                    addBotMessage(sourcesHtml, true);
+                 }
+
+                 chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            } catch (error) {
+                log('전체 처리 오류:', error);
+                removeLoadingMessage(); // Ensure loading is removed on error
+                addBotMessage(`처리 중 오류가 발생했습니다: ${error.message}`);
+                updateProgress(100, '오류 발생'); // Update progress bar on error
+                 chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll down even on error
+            } finally {
+                 // Make sure progress bar completes/hides even if errors occurred somewhere
+                 // Use a slight delay to ensure final status text is visible
+                 setTimeout(() => {
+                      if (progressBar.style.width !== '100%') {
+                          updateProgress(100, progressStatus.textContent || '완료');
+                      }
+                  }, 200);
+            }
+        }
+
+        // 메시지 전송 이벤트 (No changes needed)
+        sendButton.addEventListener('click', () => {
+            const message = userInput.value.trim();
+            if (message) {
+                userInput.value = '';
+                userInput.focus(); // Keep focus on input after send
+                processMessage(message);
+            }
+        });
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { // Allow shift+enter for newline if needed in future
+                e.preventDefault(); // Prevent default form submission/newline
+                sendButton.click();
+            }
+        });
+
+        // 초기화
+         log("챗봇 초기화 완료. API 키 로드됨 (config.js 확인).");
+        userInput.focus();
+
+    </script>
+</body>
+</html>
