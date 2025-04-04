@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>검색 기반 Gemini 챗봇</title> 
+    <title>검색 기반 Gemini 챗봇</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
-    <script src="config.js"></script> 
+    <script src="config.js"></script>
     <style>
         body {
             transition: background-color 0.3s, color 0.3s;
@@ -207,10 +207,10 @@
             applyTheme(currentModeIsDark);
         });
          prefersDark.addEventListener('change', (e) => {
-             if (localStorage.getItem('dark-mode') === null) {
-                currentModeIsDark = e.matches;
-                applyTheme(currentModeIsDark);
-             }
+              if (localStorage.getItem('dark-mode') === null) {
+                  currentModeIsDark = e.matches;
+                  applyTheme(currentModeIsDark);
+              }
          });
 
 
@@ -251,12 +251,12 @@
         function escapeHtml(unsafe) {
             if (unsafe === null || typeof unsafe === 'undefined') return '';
              return unsafe
-                 .toString()
-                 .replace(/&/g, "&amp;")
-                 .replace(/</g, "&lt;")
-                 .replace(/>/g, "&gt;")
-                 .replace(/"/g, "&quot;")
-                 .replace(/'/g, "&#039;");
+                  .toString()
+                  .replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#039;");
          }
 
         function addUserMessage(message) {
@@ -363,7 +363,7 @@
 
         function scrollToBottom() {
              setTimeout(() => {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                 chatMessages.scrollTop = chatMessages.scrollHeight;
              }, 50);
         }
 
@@ -526,31 +526,31 @@
                  // Enhanced Logging Point 4: Log Content-Type
                  log(`[${proxy.name}] 응답 Content-Type: ${contentType}. URL: ${url}`);
                  if (!contentType.includes('text/html') && !contentType.includes('application/xhtml+xml') && !contentType.includes('text/plain')) {
-                    if (contentType.includes('application/json')) {
-                        try {
-                            const json = await response.json();
-                            const textContent = `JSON 데이터:\n${JSON.stringify(json, null, 2)}`.substring(0, 8000);
-                            cache.setCrawl(url, textContent);
-                            log(`[${proxy.name}] JSON 데이터 처리 완료. URL: ${url}`);
-                            return textContent;
-                        } catch (e) {
-                            // Enhanced Logging Point 4
-                            log(`[${proxy.name}] JSON 파싱 오류. Content-Type: ${contentType}, URL: ${url}`, e);
-                            return `JSON 파싱 오류. Content-Type: ${contentType}, URL: ${url}`;
-                        }
-                     } else if (contentType.includes('xml') && !contentType.includes('xhtml')) {
+                     if (contentType.includes('application/json')) {
                          try {
-                             const xmlText = await response.text();
-                             const textContent = `XML 데이터:\n${xmlText}`.substring(0, 8000);
-                              cache.setCrawl(url, textContent);
-                             log(`[${proxy.name}] XML 데이터 처리 완료. URL: ${url}`);
+                             const json = await response.json();
+                             const textContent = `JSON 데이터:\n${JSON.stringify(json, null, 2)}`.substring(0, 8000);
+                             cache.setCrawl(url, textContent);
+                             log(`[${proxy.name}] JSON 데이터 처리 완료. URL: ${url}`);
                              return textContent;
                          } catch (e) {
-                              // Enhanced Logging Point 4
-                             log(`[${proxy.name}] XML 파싱 오류. Content-Type: ${contentType}, URL: ${url}`, e);
-                             return `XML 파싱 오류. Content-Type: ${contentType}, URL: ${url}`;
+                             // Enhanced Logging Point 4
+                             log(`[${proxy.name}] JSON 파싱 오류. Content-Type: ${contentType}, URL: ${url}`, e);
+                             return `JSON 파싱 오류. Content-Type: ${contentType}, URL: ${url}`;
                          }
-                     }
+                      } else if (contentType.includes('xml') && !contentType.includes('xhtml')) {
+                           try {
+                                const xmlText = await response.text();
+                                const textContent = `XML 데이터:\n${xmlText}`.substring(0, 8000);
+                                 cache.setCrawl(url, textContent);
+                                log(`[${proxy.name}] XML 데이터 처리 완료. URL: ${url}`);
+                                return textContent;
+                           } catch (e) {
+                                // Enhanced Logging Point 4
+                                log(`[${proxy.name}] XML 파싱 오류. Content-Type: ${contentType}, URL: ${url}`, e);
+                                return `XML 파싱 오류. Content-Type: ${contentType}, URL: ${url}`;
+                           }
+                      }
                      // Enhanced Logging Point 4
                      log(`[${proxy.name}] 지원하지 않는 Content-Type: ${contentType}, URL: ${url}`);
                      return `지원하지 않는 콘텐츠 타입 (${contentType}): ${url}`;
@@ -578,9 +578,9 @@
                  });
 
                  let mainContent = doc.querySelector('main') ||
-                                   doc.querySelector('article') ||
-                                   doc.querySelector('[role="main"]') ||
-                                   doc.querySelector('.content, .main-content, .post-content, .entry-content, #content, #main, .article-body, .entry, .page-content');
+                                  doc.querySelector('article') ||
+                                  doc.querySelector('[role="main"]') ||
+                                  doc.querySelector('.content, .main-content, .post-content, .entry-content, #content, #main, .article-body, .entry, .page-content');
 
                  if (!mainContent || mainContent.textContent.trim().length < 100) {
                      log(`[${proxy.name}] Main content 작거나 없음, body 사용. URL: ${url}`);
@@ -594,7 +594,7 @@
                       if (!node) return ''; // Guard against null nodes
                       for (const child of node.childNodes) {
                           if (child.nodeType === Node.TEXT_NODE) {
-                              nodeText += child.textContent;
+                               nodeText += child.textContent;
                           } else if (child.nodeType === Node.ELEMENT_NODE) {
                                const tagName = child.tagName.toLowerCase();
                                let displayStyle = 'inline'; // Default
@@ -622,9 +622,9 @@
 
                  text = extractTextNodes(mainContent);
                  text = text.replace(/(\s*\n\s*){3,}/g, '\n\n')
-                            .replace(/[ \t]{2,}/g, ' ')
-                            .replace(/^\s+|\s+$/gm, '')
-                            .trim();
+                           .replace(/[ \t]{2,}/g, ' ')
+                           .replace(/^\s+|\s+$/gm, '')
+                           .trim();
 
                  text = `제목: ${title}\n${metaDescription ? '설명: ' + metaDescription + '\n' : ''}\n---\n\n${text}`;
                  const maxLength = 8000;
@@ -666,20 +666,20 @@
             let completedCount = 0;
             const crawlPromises = pagesToCrawl.map(async (pageInfo, index) => {
                  try {
-                     // crawlWebpage now handles its own retries internally with available proxies
-                     const content = await crawlWebpage(pageInfo.link); // Start attempt 0
-                      completedCount++;
-                     updateProgress(30 + Math.floor(completedCount * 40 / totalSites), `${totalSites}개 중 ${completedCount}개 사이트 분석 완료`);
-                     // Enhanced Logging Point 4: Log successful crawl outcome within map
-                     log(`사이트 ${index + 1}/${totalSites} 분석 완료 (성공 또는 최종 실패 메시지 포함): ${pageInfo.link}, 결과 길이: ${content?.length}`);
-                     return { ...pageInfo, content, status: 'fulfilled' };
+                      // crawlWebpage now handles its own retries internally with available proxies
+                      const content = await crawlWebpage(pageInfo.link); // Start attempt 0
+                       completedCount++;
+                      updateProgress(30 + Math.floor(completedCount * 40 / totalSites), `${totalSites}개 중 ${completedCount}개 사이트 분석 완료`);
+                      // Enhanced Logging Point 4: Log successful crawl outcome within map
+                      log(`사이트 ${index + 1}/${totalSites} 분석 완료 (성공 또는 최종 실패 메시지 포함): ${pageInfo.link}, 결과 길이: ${content?.length}`);
+                      return { ...pageInfo, content, status: 'fulfilled' };
                  } catch (error) {
-                     // This outer catch is less likely now but good as a fallback
-                     // Enhanced Logging Point 4: Log unexpected errors during mapping/Promise handling
-                     log(`crawlWebpages 내 예외 발생 (사이트 ${pageInfo.link}):`, error.message, error.stack);
-                     completedCount++;
-                     updateProgress(30 + Math.floor(completedCount * 40 / totalSites), `${totalSites}개 중 ${completedCount}개 사이트 분석 완료 (오류 포함)`);
-                     return { ...pageInfo, content: `크롤링 중 예상치 못한 오류: ${error.message}`, status: 'rejected' };
+                      // This outer catch is less likely now but good as a fallback
+                      // Enhanced Logging Point 4: Log unexpected errors during mapping/Promise handling
+                      log(`crawlWebpages 내 예외 발생 (사이트 ${pageInfo.link}):`, error.message, error.stack);
+                      completedCount++;
+                      updateProgress(30 + Math.floor(completedCount * 40 / totalSites), `${totalSites}개 중 ${completedCount}개 사이트 분석 완료 (오류 포함)`);
+                      return { ...pageInfo, content: `크롤링 중 예상치 못한 오류: ${error.message}`, status: 'rejected' };
                  }
             });
 
@@ -707,7 +707,7 @@
                          ...originalPageInfo,
                          content: `크롤링 실패: ${errorMessage}`, // Provide the error message
                          status: 'rejected'
-                      };
+                       };
                  }
              });
         }
@@ -739,7 +739,7 @@
 
                 if ((!isFailure || isSnippetFallback) && result.content && result.content.trim() !== '') {
                      // Enhanced Logging Point 4: Log content being added to Gemini context
-                    log(`Gemini 컨텍스트 추가됨 (출처 ${sourceNum}): ${result.title}, 내용 시작: ${result.content.substring(0, 100)}...`);
+                     log(`Gemini 컨텍스트 추가됨 (출처 ${sourceNum}): ${result.title}, 내용 시작: ${result.content.substring(0, 100)}...`);
                     context += `[출처 ${sourceNum}: ${result.title}]\n${result.content}\n\n---\n\n`;
                     validSourcesForPrompt.push({...result, sourceNum});
                 } else {
@@ -762,9 +762,9 @@
 - 내용을 분석하여 사용자의 질문에 대해 정확하고 상세하게, 한국어로 답변하세요.
 - 답변 내용 중 특정 출처를 참고한 부분이 있다면, 해당 문장 끝에 '[출처 번호]' 형식으로 반드시 명시하세요. (예: ... 입니다 [출처 1].)
 - 여러 출처를 종합한 경우, 관련된 모든 출처 번호를 명시하세요. (예: ... 입니다 [출처 1][출처 3].)
-- 출처 내용만으로 답변하기 어렵거나 정보가 부족하면, "제공된 정보만으로는 답변하기 어렵습니다." 또는 "정보가 부족합니다." 라고 솔직하게 답변하세요. 추측하거나 외부 지식을 사용하지 마세요.'
+- 출처 내용만으로 답변하기 어렵거나 정보가 부족하면, "제공된 정보만으로는 답변하기 어렵습니다." 또는 "정보가 부족합니다." 라고 솔직하게 답변하세요. 추측하거나 외부 지식을 사용하지 마세요.`;
 
-             const requestPayload = {
+            const requestPayload = {
                 contents: [{
                     role: "user",
                     parts: [{ text: `System Instructions:\n${systemInstruction}\n\n---\n\n사용자 질문:\n${question}\n\n---\n\n웹 검색 결과 (참고 자료):\n${context}` }]
@@ -824,6 +824,8 @@
                      answer = answer.replace(citationRegex, sourceLink);
                  });
 
+                 // --- REMOVED: Gemini-generated source list linking ---
+                 /*
                  // Link "참고 자료" List
                  answer = answer.replace(/(\*?\s*출처\s*(\d+)\s*:\s*)(.*?)\s*-\s*(https?:\/\/[^\s<]+)/g, (match, prefix, num, title, link) => {
                      const source = validSourcesForPrompt.find(s => s.sourceNum === parseInt(num));
@@ -834,17 +836,18 @@
                  });
                  // Fallback linking for titles
                  validSourcesForPrompt.forEach(source => {
-                      // *** FIX: Escape regex special characters in the title ***
-                      const escapedTitleForRegex = escapeRegExp(escapeHtml(source.title));
-                      const titleRegex = new RegExp(`(${escapedTitleForRegex})`, 'g'); // Use escaped title for regex
+                     // *** FIX: Escape regex special characters in the title ***
+                     const escapedTitleForRegex = escapeRegExp(escapeHtml(source.title));
+                     const titleRegex = new RegExp(`(${escapedTitleForRegex})`, 'g'); // Use escaped title for regex
 
-                      answer = answer.replace(titleRegex, (match, capturedTitle) => {
-                           const surroundingChars = answer.substring(answer.indexOf(match) - 10, answer.indexOf(match) + match.length + 10);
-                           if (surroundingChars.includes('<a href')) { return capturedTitle; }
-                           // Use original (HTML escaped) title for display in the link
-                           return `<a href="${escapeHtml(source.link)}" target="_blank" class="source-link">${escapeHtml(source.title)}</a>`;
-                      });
+                     answer = answer.replace(titleRegex, (match, capturedTitle) => {
+                          const surroundingChars = answer.substring(answer.indexOf(match) - 10, answer.indexOf(match) + match.length + 10);
+                          if (surroundingChars.includes('<a href')) { return capturedTitle; }
+                          // Use original (HTML escaped) title for display in the link
+                          return `<a href="${escapeHtml(source.link)}" target="_blank" class="source-link">${escapeHtml(source.title)}</a>`;
+                     });
                  });
+                 */
 
                  // Basic Markdown to HTML
                  answer = answer.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
@@ -865,9 +868,9 @@
 
             } catch (error) {
                  // Enhanced Logging Point 4
-                log('Gemini 응답 생성/처리 중 예외 발생:', error.message, error.stack);
-                updateProgress(100, '응답 처리 중 오류 발생');
-                return `Gemini 응답 처리 중 오류 발생: ${error.message}`;
+                 log('Gemini 응답 생성/처리 중 예외 발생:', error.message, error.stack);
+                 updateProgress(100, '응답 처리 중 오류 발생');
+                 return `Gemini 응답 처리 중 오류 발생: ${error.message}`;
             }
         }
 
@@ -877,92 +880,92 @@
              setLoadingState(true);
 
             try {
-                // 1. Google Search
-                updateLoadingMessage('Google 검색 중...');
-                const searchResults = await googleSearch(message);
-                if (!searchResults || searchResults.length === 0) {
-                    addBotMessage('관련 웹페이지를 찾을 수 없습니다. 다른 검색어나 질문을 시도해 보세요.');
-                    updateProgress(100, '검색 결과 없음');
-                     setLoadingState(false);
-                    return;
-                }
-                log("검색 결과:", searchResults.map(r => ({ link: r.link, title: r.title, snippet_exists: !!r.snippet })));
+                 // 1. Google Search
+                 updateLoadingMessage('Google 검색 중...');
+                 const searchResults = await googleSearch(message);
+                 if (!searchResults || searchResults.length === 0) {
+                     addBotMessage('관련 웹페이지를 찾을 수 없습니다. 다른 검색어나 질문을 시도해 보세요.');
+                     updateProgress(100, '검색 결과 없음');
+                      setLoadingState(false);
+                     return;
+                 }
+                 log("검색 결과:", searchResults.map(r => ({ link: r.link, title: r.title, snippet_exists: !!r.snippet })));
 
-                // 2. Crawl Webpages
-                updateLoadingMessage('웹페이지 정보 분석 중...');
-                const pagesToCrawl = searchResults.map(r => ({
-                    link: r.link,
-                    title: r.title,
-                    snippet: r.snippet
-                }));
-                const crawledResults = await crawlWebpages(pagesToCrawl); // Results now include status and original data
+                 // 2. Crawl Webpages
+                 updateLoadingMessage('웹페이지 정보 분석 중...');
+                 const pagesToCrawl = searchResults.map(r => ({
+                     link: r.link,
+                     title: r.title,
+                     snippet: r.snippet
+                 }));
+                 const crawledResults = await crawlWebpages(pagesToCrawl); // Results now include status and original data
 
-                // 3. Apply Snippet Fallback & Prepare for Gemini
-                updateLoadingMessage('분석 결과 정리 중...');
-                const resultsForGemini = crawledResults.map((result, index) => {
-                    // Check if crawling failed based on common failure messages
-                    const crawlFailed = result.status === 'rejected' || result.content?.startsWith('크롤링 실패') || result.content?.startsWith('크롤링 건너뜀') || result.content?.startsWith('지원하지 않는 콘텐츠 타입');
-                    const hasSnippet = result.snippet && result.snippet.trim() !== '';
+                 // 3. Apply Snippet Fallback & Prepare for Gemini
+                 updateLoadingMessage('분석 결과 정리 중...');
+                 const resultsForGemini = crawledResults.map((result, index) => {
+                     // Check if crawling failed based on common failure messages
+                     const crawlFailed = result.status === 'rejected' || result.content?.startsWith('크롤링 실패') || result.content?.startsWith('크롤링 건너뜀') || result.content?.startsWith('지원하지 않는 콘텐츠 타입');
+                     const hasSnippet = result.snippet && result.snippet.trim() !== '';
 
-                    if (crawlFailed && hasSnippet) {
-                        log(`크롤링 실패/건너뜀, 스니펫 사용: ${result.title} (URL: ${result.link})`);
-                        // Keep original data, replace content with snippet fallback
-                        return { ...result, content: `[스니펫 요약] ${result.snippet}`, status: 'fulfilled_with_snippet' }; // Mark status for clarity
-                    } else if (crawlFailed) {
-                        log(`크롤링 실패/부적합, 스니펫 없음: ${result.title} (URL: ${result.link})`);
-                        // Mark as unusable, keep failure message in content for potential debugging/logging
-                         return { ...result, content: `[정보 없음] ${result.content || '크롤링 실패'}`, status: 'rejected_no_snippet' };
-                    } else {
-                         // Crawl successful (or content was extracted even if short)
-                          // Ensure status is 'fulfilled' if it came from crawlWebpage successfully
-                         return { ...result, status: 'fulfilled' };
-                    }
-                }).map((result, index) => ({ ...result, sourceNum: index + 1 })); // Add sourceNum consistently at the end
+                     if (crawlFailed && hasSnippet) {
+                         log(`크롤링 실패/건너뜀, 스니펫 사용: ${result.title} (URL: ${result.link})`);
+                         // Keep original data, replace content with snippet fallback
+                         return { ...result, content: `[스니펫 요약] ${result.snippet}`, status: 'fulfilled_with_snippet' }; // Mark status for clarity
+                     } else if (crawlFailed) {
+                         log(`크롤링 실패/부적합, 스니펫 없음: ${result.title} (URL: ${result.link})`);
+                         // Mark as unusable, keep failure message in content for potential debugging/logging
+                          return { ...result, content: `[정보 없음] ${result.content || '크롤링 실패'}`, status: 'rejected_no_snippet' };
+                     } else {
+                          // Crawl successful (or content was extracted even if short)
+                           // Ensure status is 'fulfilled' if it came from crawlWebpage successfully
+                          return { ...result, status: 'fulfilled' };
+                     }
+                 }).map((result, index) => ({ ...result, sourceNum: index + 1 })); // Add sourceNum consistently at the end
 
-                log("Gemini에게 전달할 최종 컨텐츠 후보 개수:", resultsForGemini.length);
+                 log("Gemini에게 전달할 최종 컨텐츠 후보 개수:", resultsForGemini.length);
 
 
-                // 4. Get Gemini Response
-                // Filter out results explicitly marked as unusable before sending to Gemini
-                 const usableResultsForGemini = resultsForGemini.filter(r => r.status !== 'rejected_no_snippet');
+                 // 4. Get Gemini Response
+                 // Filter out results explicitly marked as unusable before sending to Gemini
+                  const usableResultsForGemini = resultsForGemini.filter(r => r.status !== 'rejected_no_snippet');
 
-                if (usableResultsForGemini.length > 0) {
-                    updateLoadingMessage('Gemini 응답 생성 중...');
-                    const geminiResponse = await getGeminiResponse(message, usableResultsForGemini);
+                 if (usableResultsForGemini.length > 0) {
+                     updateLoadingMessage('Gemini 응답 생성 중...');
+                     const geminiResponse = await getGeminiResponse(message, usableResultsForGemini);
 
-                     removeLoadingMessage();
-                    const botMsgElement = addBotMessage(geminiResponse, true);
+                      removeLoadingMessage();
+                     const botMsgElement = addBotMessage(geminiResponse, true);
 
-                    // 5. Append Original Search Results List
-                    const sourcesDiv = document.createElement('div');
-                    sourcesDiv.className = 'mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 no-print';
-                    // Use the *original* searchResults array for this list
-                    let sourcesHtml = '<p class="font-medium mb-2">참고한 원본 검색 결과:</p><ul class="list-disc list-inside space-y-1">';
-                    searchResults.forEach((result, index) => {
-                        sourcesHtml += `<li>(${index + 1}) <a href="${escapeHtml(result.link)}" target="_blank" class="source-link hover:underline" title="${escapeHtml(result.snippet)}">${escapeHtml(result.title)}</a></li>`;
-                    });
-                    sourcesHtml += '</ul>';
-                    sourcesDiv.innerHTML = sourcesHtml;
+                     // 5. Append Original Search Results List (Unchanged - Keeping this part)
+                     const sourcesDiv = document.createElement('div');
+                     sourcesDiv.className = 'mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 no-print';
+                     // Use the *original* searchResults array for this list
+                     let sourcesHtml = '<p class="font-medium mb-2">참고한 원본 검색 결과:</p><ul class="list-disc list-inside space-y-1">';
+                     searchResults.forEach((result, index) => {
+                         sourcesHtml += `<li>(${index + 1}) <a href="${escapeHtml(result.link)}" target="_blank" class="source-link hover:underline" title="${escapeHtml(result.snippet)}">${escapeHtml(result.title)}</a></li>`;
+                     });
+                     sourcesHtml += '</ul>';
+                     sourcesDiv.innerHTML = sourcesHtml;
 
-                    if (botMsgElement) {
-                         botMsgElement.appendChild(sourcesDiv);
-                         scrollToBottom();
-                    }
+                     if (botMsgElement) {
+                          botMsgElement.appendChild(sourcesDiv);
+                          scrollToBottom();
+                     }
 
-                } else {
-                    // This happens if search succeeded but ALL crawls failed AND had no snippets
-                     removeLoadingMessage();
-                    log("처리 가능한 유효 정보 없음 (모든 크롤링/스니펫 실패)");
-                    addBotMessage('웹사이트 정보를 분석하는 데 실패했고, 사용할 수 있는 요약 정보도 없습니다. 다른 질문을 시도해 보세요.');
-                    updateProgress(100, '처리할 내용 없음');
-                }
+                 } else {
+                     // This happens if search succeeded but ALL crawls failed AND had no snippets
+                      removeLoadingMessage();
+                     log("처리 가능한 유효 정보 없음 (모든 크롤링/스니펫 실패)");
+                     addBotMessage('웹사이트 정보를 분석하는 데 실패했고, 사용할 수 있는 요약 정보도 없습니다. 다른 질문을 시도해 보세요.');
+                     updateProgress(100, '처리할 내용 없음');
+                 }
 
             } catch (error) {
                  // Enhanced Logging Point 4: Log top-level processing errors
-                log('전체 처리 중 오류 발생:', error.message, error.stack);
+                 log('전체 처리 중 오류 발생:', error.message, error.stack);
                  removeLoadingMessage();
-                addBotMessage(`처리 중 오류가 발생했습니다: ${error.message}`);
-                updateProgress(100, '오류 발생');
+                 addBotMessage(`처리 중 오류가 발생했습니다: ${error.message}`);
+                 updateProgress(100, '오류 발생');
             } finally {
                  setLoadingState(false);
                  if (progressBar.style.width !== '100%') {
