@@ -813,7 +813,7 @@ ${isFinal?"이것은 최종 답변입니다.":"이것은 초기 답변입니다.
       }
       updateStatusUI(3, 'completed', '초기 답변 완료');
       const firstAnswer = res1.answer;
-      addBotMessage(firstAnswer);
+      // addBotMessage(firstAnswer);
 
       // 추가 검색어
       const followQueries = await generateFollowUpQueries(msg, firstAnswer);
