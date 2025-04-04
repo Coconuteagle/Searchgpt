@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>검색 기반 Gemini 챗봇 (Retro CRT Style)</title>
+  <title>Matrix Search(Retro CRT Style)</title>
 
   <!-- Tailwind / FontAwesome (Optionally needed for icons) -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -36,6 +36,20 @@
       min-height: 400px;
       overflow-y: auto;
       padding: 8px;
+      display: flex;
+      flex-direction: column; /* 새 메시지를 맨 위에 붙이려면 '컬럼 역순' or 삽입 위치를 조정 */
+    }
+
+    /* 스크롤바 디자인 (WebKit 전용) */
+    .chat-box::-webkit-scrollbar {
+      width: 8px;
+    }
+    .chat-box::-webkit-scrollbar-track {
+      background-color: #001500; /* 짙은 녹색 톤 */
+    }
+    .chat-box::-webkit-scrollbar-thumb {
+      background-color: #00ff00;
+      border: 1px solid #001500;
     }
 
     /* 유저 / 봇 메시지 공통 */
@@ -262,19 +276,22 @@
       .replace(/'/g, "&#039;");
   }
 
-  // 사용자 메시지 (화면 오른쪽)
+  // 사용자 메시지를 "맨 위"에 추가하고, 스크롤을 상단으로 이동
   function addUserMessage(text) {
     const div = document.createElement('div');
     div.className = 'user-message';
     div.textContent = text;
-    chatBox.appendChild(div);
-    
-    // "사용자 메시지가 최상단" → scrollIntoView({ block: 'start' })
-    // (이 메시지가 막 추가되었을 때, 해당 메시지를 화면 맨 위에 위치)
-    div.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    // 가장 위에 삽입
+    if (chatBox.firstChild) {
+      chatBox.insertBefore(div, chatBox.firstChild);
+    } else {
+      chatBox.appendChild(div);
+    }
+    // 상단으로 스크롤
+    chatBox.scrollTop = 0;
   }
 
-  // 봇 메시지 (화면 왼쪽)
+  // 봇 메시지를 "맨 위"에 추가하고, 스크롤을 상단으로 이동
   function addBotMessage(html) {
     removeStatusUI(); // 새 봇메시지 시점에 기존 상태창 제거 (디자인상)
 
@@ -282,9 +299,17 @@
     div.className = 'bot-message';
     const sanitized = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
     div.innerHTML = sanitized;
-    chatBox.appendChild(div);
 
-    // 봇 메시지는 자동 스크롤하지 않으므로, 사용자가 직접 스크롤해야 볼 수 있음
+    // 가장 위에 삽입
+    if (chatBox.firstChild) {
+      chatBox.insertBefore(div, chatBox.firstChild);
+    } else {
+      chatBox.appendChild(div);
+    }
+    // 상단으로 스크롤
+    chatBox.scrollTop = 0;
+
+    return div;
   }
 
   // --- 상태(Status) UI ---
@@ -319,7 +344,12 @@
       </ul>`;
     container.innerHTML = listHtml;
 
-    chatBox.appendChild(container);
+    // 상태 UI도 맨 위로
+    if (chatBox.firstChild) {
+      chatBox.insertBefore(container, chatBox.firstChild);
+    } else {
+      chatBox.appendChild(container);
+    }
   }
 
   function updateStatusUI(step, status, detail = '') {
@@ -366,6 +396,8 @@
       userInput.disabled = true;
       sendButton.disabled = true;
       createStatusUI();
+      // 상태 UI를 맨 위로 배치했으니 스크롤도 올려놓음
+      chatBox.scrollTop = 0;
     } else {
       userInput.disabled = false;
       sendButton.disabled = false;
@@ -374,8 +406,6 @@
   }
 
   /* ======== GOOGLE SEARCH / CRAWLING ======== */
-  // (간단히 기존 로직 복붙)
-
   const PROXY_COOLDOWN_MS = 3 * 60 * 1000;
   const proxies = [
     {
@@ -410,7 +440,6 @@
       const data = await resp.json();
       if (!resp.ok || data.error) {
         const msg = data.error ? data.error.message : `HTTP ${resp.status}`;
-        // Quota exceeded or limit
         if (msg.includes("Quota exceeded") || msg.includes("limit") || resp.status === 403) {
           currentSearchConfigIndex++;
           return googleSearch(query, numResults, attempt + 1);
@@ -670,7 +699,7 @@ ${initialAnswer.substring(0,500)}
 
     const systemPrompt = `당신은 제공된 웹 검색 결과(출처)로부터 사용자 질문에 답하는 AI 모피어스입니다.
 - 각 출처는 "[출처 번호: 제목]" 형태
-- 질문에 맞게 분석하고 한국어 반말로 답변 마치 모피어스처럼. 비밀을 얘기하는 것처럼.
+- 질문에 맞게 분석하고 한국어 반말로 답변 마치 모피어스처럼. 비밀을 얘기하는 것처럼. 친절하고 자세하게 설명
 - 특정 출처 내용을 사용한 부분은 문장 끝에 [출처 번호] 표시 (복수 출처면 여러 개)
 - 정보 부족하면 "제공된 정보만으론 답변이 어렵다." 식으로 안내
 ${isFinal?"이것은 최종 답변입니다.":"이것은 초기 답변입니다."}
