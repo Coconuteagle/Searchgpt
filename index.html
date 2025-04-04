@@ -1,202 +1,160 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>검색 기반 Gemini 챗봇</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
-    <!-- config.js 안에 window.apiKeys = {...} 객체가 정의되어 있어야 합니다. -->
-    <script src="config.js"></script>
-    <style>
-        body {
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .dark {
-            background-color: #1a202c;
-            color: #e2e8f0;
-        }
-        .chat-container {
-            height: calc(100vh - 180px);
-            min-height: 400px;
-        }
-        .user-message {
-            background-color: #e3f2fd;
-            border-radius: 18px 18px 2px 18px;
-            margin-left: auto;
-            margin-right: 0;
-        }
-        .bot-message {
-            background-color: #f1f1f1;
-            border-radius: 18px 18px 18px 2px;
-            margin-left: 0;
-            margin-right: auto;
-        }
-        .dark .user-message {
-            background-color: #2d3748;
-        }
-        .dark .bot-message {
-            background-color: #4a5568;
-        }
-        /* Progress Bar Styles */
-        .progress-container {
-            width: 100%;
-            height: 8px;
-            background-color: #e2e8f0;
-            border-radius: 4px;
-            margin-top: 8px;
-            overflow: hidden;
-        }
-        .progress-bar {
-            height: 100%;
-            border-radius: 4px 0 0 4px;
-            width: 0%;
-            background-color: #4299e1;
-            transition: width 0.3s ease-in-out;
-        }
-        .dark .progress-container {
-            background-color: #2d3748;
-        }
-        .progress-status {
-            margin-top: 5px;
-            font-size: 12px;
-            color: #718096;
-            text-align: center;
-        }
-        .dark .progress-status {
-            color: #a0aec0;
-        }
-        /* Source Link Styles */
-        .source-link {
-            color: #3182ce;
-            text-decoration: underline;
-            word-break: break-all;
-        }
-        .dark .source-link {
-            color: #90cdf4;
-        }
-        .source-link:hover {
-            text-decoration: none;
-        }
-        /* Typing Indicator Styles */
-        .ellipsis {
-            display: inline-block;
-            width: 60px;
-            text-align: left;
-        }
-        .typing-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: currentColor;
-            margin-right: 4px;
-            animation: typing 1s infinite;
-        }
-        .typing-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        .typing-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-        @keyframes typing {
-            0%, 100% { opacity: 0.3; transform: translateY(0); }
-            50% { opacity: 1; transform: translateY(-2px); }
-        }
-        /* Print Styles */
-        @media print {
-            .no-print { display: none !important; }
-            body { background-color: #fff; color: #000; }
-            .dark { background-color: #fff; color: #000; }
-            .dark .user-message, .dark .bot-message { background-color: #f1f1f1; color: #000; }
-            .user-message, .bot-message { background-color: #f1f1f1; }
-            .chat-container { height: auto; max-height: none; overflow: visible; }
-            .source-link { color: #0000EE; text-decoration: underline; }
-            .print-break { page-break-before: always; }
-            #chat-form, #progress-section, #theme-toggle { display: none; }
-        }
-        /* Status List Styles */
-        #status-list-container {
-        }
-        .status-item {
-            display: flex;
-            align-items: center;
-            transition: all 0.3s ease;
-            padding: 0.25rem 0;
-        }
-        .status-icon {
-            width: 20px;
-            text-align: center;
-            margin-right: 0.5rem;
-            transition: color 0.3s ease;
-        }
-        .status-label {
-            transition: color 0.3s ease, text-decoration 0.3s ease;
-        }
-        .status-detail {
-            margin-left: 0.5rem;
-            font-size: 0.8rem;
-        }
-        .status-item.status-pending .status-icon { color: #a0aec0; }
-        .status-item.status-pending .status-label { color: #a0aec0; }
-        .status-item.status-pending .status-detail { display: none; }
-        .status-item.status-active .status-icon { color: #4299e1; animation: spin 1s linear infinite; }
-        .status-item.status-active .status-label { font-weight: 600; color: inherit; }
-        .status-item.status-active .status-detail { display: inline; }
-        .status-item.status-completed .status-icon { color: #48bb78; animation: none; }
-        .status-item.status-completed .status-label { color: #718096; text-decoration: line-through; }
-        .status-item.status-completed .status-detail { display: none; }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>검색 기반 Gemini 챗봇</title>
+
+  <!-- Tailwind / FontAwesome -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
+
+  <!-- 반드시 config.js가 먼저 로드되어야 한다! -->
+  <script src="config.js"></script>
+
+  <style>
+    body { transition: background-color 0.3s, color 0.3s; }
+    .dark { background-color: #1a202c; color: #e2e8f0; }
+    .chat-container { height: calc(100vh - 180px); min-height: 400px; }
+    .user-message {
+      background-color: #e3f2fd; border-radius: 18px 18px 2px 18px;
+      margin-left: auto; margin-right: 0;
+    }
+    .bot-message {
+      background-color: #f1f1f1; border-radius: 18px 18px 18px 2px;
+      margin-left: 0; margin-right: auto;
+    }
+    .dark .user-message { background-color: #2d3748; }
+    .dark .bot-message { background-color: #4a5568; }
+
+    .progress-container {
+      width: 100%; height: 8px; background-color: #e2e8f0;
+      border-radius: 4px; margin-top: 8px; overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%; border-radius: 4px 0 0 4px; width: 0%;
+      background-color: #4299e1; transition: width 0.3s ease-in-out;
+    }
+    .dark .progress-container { background-color: #2d3748; }
+    .progress-status {
+      margin-top: 5px; font-size: 12px; color: #718096; text-align: center;
+    }
+    .dark .progress-status { color: #a0aec0; }
+
+    .source-link {
+      color: #3182ce; text-decoration: underline; word-break: break-all;
+    }
+    .dark .source-link { color: #90cdf4; }
+    .source-link:hover { text-decoration: none; }
+
+    .ellipsis { display: inline-block; width: 60px; text-align: left; }
+    .typing-dot {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+      background-color: currentColor; margin-right: 4px; animation: typing 1s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing {
+      0%, 100% { opacity: 0.3; transform: translateY(0); }
+      50% { opacity: 1; transform: translateY(-2px); }
+    }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background-color: #fff; color: #000; }
+      .dark { background-color: #fff; color: #000; }
+      .dark .user-message, .dark .bot-message { background-color: #f1f1f1; color: #000; }
+      .user-message, .bot-message { background-color: #f1f1f1; }
+      .chat-container { height: auto; max-height: none; overflow: visible; }
+      .source-link { color: #0000EE; text-decoration: underline; }
+      .print-break { page-break-before: always; }
+      #chat-form, #progress-section, #theme-toggle { display: none; }
+    }
+
+    #status-list-container {}
+    .status-item {
+      display: flex; align-items: center; transition: all 0.3s ease; padding: 0.25rem 0;
+    }
+    .status-icon {
+      width: 20px; text-align: center; margin-right: 0.5rem; transition: color 0.3s ease;
+    }
+    .status-label {
+      transition: color 0.3s ease, text-decoration 0.3s ease;
+    }
+    .status-detail {
+      margin-left: 0.5rem; font-size: 0.8rem;
+    }
+    .status-item.status-pending .status-icon { color: #a0aec0; }
+    .status-item.status-pending .status-label { color: #a0aec0; }
+    .status-item.status-pending .status-detail { display: none; }
+    .status-item.status-active .status-icon {
+      color: #4299e1; animation: spin 1s linear infinite;
+    }
+    .status-item.status-active .status-label {
+      font-weight: 600; color: inherit;
+    }
+    .status-item.status-active .status-detail { display: inline; }
+    .status-item.status-completed .status-icon { color: #48bb78; animation: none; }
+    .status-item.status-completed .status-label {
+      color: #718096; text-decoration: line-through;
+    }
+    .status-item.status-completed .status-detail { display: none; }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 
 <body class="bg-gray-100 min-h-screen">
 <div class="container mx-auto px-4 py-8 max-w-6xl">
-    <div class="flex justify-between items-center mb-6 no-print">
-        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">검색 기반 Gemini 챗봇</h1>
-        <div class="flex space-x-4">
-            <button id="theme-toggle" class="px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-500">
-                <i class="fas fa-moon"></i>
-            </button>
-            <button onclick="window.print()" class="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <i class="fas fa-print"></i>
-            </button>
-        </div>
+  <div class="flex justify-between items-center mb-6 no-print">
+    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">검색 기반 Gemini 챗봇</h1>
+    <div class="flex space-x-4">
+      <button id="theme-toggle"
+              class="px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-500">
+        <i class="fas fa-moon"></i>
+      </button>
+      <button onclick="window.print()"
+              class="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <i class="fas fa-print"></i>
+      </button>
+    </div>
+  </div>
+
+  <div id="chat-box" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+    <div id="chat-messages" class="chat-container p-4 overflow-y-auto space-y-4">
+      <div class="bot-message p-4 text-gray-800 dark:text-gray-200 max-w-3xl">
+        <p>안녕하세요! 검색 기반 Gemini 챗봇입니다. 궁금한 점이 있으시면 질문해주세요. 제가 구글 검색과 웹페이지 분석(실패 시 요약 정보 활용)을 통해 답변해 드리겠습니다.</p>
+      </div>
     </div>
 
-    <div id="chat-box" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-        <div id="chat-messages" class="chat-container p-4 overflow-y-auto space-y-4">
-            <div class="bot-message p-4 text-gray-800 dark:text-gray-200 max-w-3xl">
-                <p>안녕하세요! 검색 기반 Gemini 챗봇입니다. 궁금한 점이 있으시면 질문해주세요. 제가 구글 검색과 웹페이지 분석(실패 시 요약 정보 활용)을 통해 답변해 드리겠습니다.</p>
-            </div>
+    <div id="chat-form" class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 no-print">
+      <div class="max-w-3xl mx-auto">
+        <div id="progress-section" class="mb-3 hidden">
+          <div id="progress-status" class="progress-status"></div>
+          <div class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+          </div>
         </div>
-
-        <div id="chat-form" class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 no-print">
-            <div class="max-w-3xl mx-auto">
-                <div id="progress-section" class="mb-3 hidden">
-                    <div id="progress-status" class="progress-status"></div>
-                    <div class="progress-container">
-                        <div id="progress-bar" class="progress-bar"></div>
-                    </div>
-                </div>
-                <div class="flex space-x-2">
-                    <input type="text" id="user-input" class="flex-grow px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" placeholder="질문을 입력하세요...">
-                    <button id="send-button" class="px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50" aria-label="Send message">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
-            </div>
+        <div class="flex space-x-2">
+          <input type="text" id="user-input"
+                 class="flex-grow px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                 placeholder="질문을 입력하세요...">
+          <button id="send-button"
+                  class="px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  aria-label="Send message">
+            <i class="fas fa-paper-plane"></i>
+          </button>
         </div>
+      </div>
     </div>
+  </div>
 
-    <div class="mt-6 text-sm text-gray-600 dark:text-gray-400 text-center no-print">
-        <p>© 2025 검색 기반 Gemini 챗봇 by 수현</p>
-    </div>
+  <div class="mt-6 text-sm text-gray-600 dark:text-gray-400 text-center no-print">
+    <p>© 2025 검색 기반 Gemini 챗봇 by 수현</p>
+  </div>
 </div>
-
 <script>
     // --- Basic Setup ---
     const DEBUG = true;
