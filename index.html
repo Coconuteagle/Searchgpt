@@ -2,8 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>검색 기반 Gemini 챗봇</title>
+  <title>검색 기반 Gemini 챗봇 (Matrix Style)</title>
 
   <!-- Tailwind / FontAwesome -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -13,148 +12,241 @@
   <script src="config.js"></script>
 
   <style>
-    body { transition: background-color 0.3s, color 0.3s; }
-    .dark { background-color: #1a202c; color: #e2e8f0; }
-    .chat-container { height: calc(100vh - 180px); min-height: 400px; }
+    /* ------------------- 전체 매트릭스 테마 (검은 배경, 초록 텍스트, 모노스페이스) ------------------- */
+    body {
+      background-color: #000000 !important;
+      color: #00ff00 !important;
+      font-family: Consolas, 'Courier New', monospace;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 링크, 버튼 등도 초록색으로 */
+    a, button {
+      color: #00ff00 !important;
+    }
+    a:hover, button:hover {
+      opacity: 0.8;
+    }
+    /* Tailwind 배경색, 테두리 등도 전부 덮어쓰기 */
+    .bg-white, .dark\\:bg-gray-800, .bg-gray-50, .container, .bg-gray-100, .rounded-lg {
+      background-color: #000000 !important;
+      border: 1px solid #008f11 !important;
+    }
+    .border-gray-200, .border-gray-700 {
+      border-color: #008f11 !important;
+    }
+    /* 일반 텍스트(회색->초록) */
+    .text-gray-800, .dark\\:text-gray-200,
+    .text-gray-600, .dark\\:text-gray-400,
+    .text-gray-500, .dark\\:text-gray-300 {
+      color: #00ff00 !important;
+    }
+    /* ------------------- 채팅 영역 ------------------- */
+    .chat-container {
+      height: calc(100vh - 180px);
+      min-height: 400px;
+      overflow-y: auto;
+      padding-right: 4px; /* 스크롤바 대비 여백 */
+    }
     .user-message {
-      background-color: #e3f2fd; border-radius: 18px 18px 2px 18px;
-      margin-left: auto; margin-right: 0;
+      background-color: #002200;
+      border: 1px solid #00ff00;
+      border-radius: 18px 18px 2px 18px;
+      margin-left: auto;
+      margin-right: 0;
+      color: #00ff00;
     }
     .bot-message {
-      background-color: #f1f1f1; border-radius: 18px 18px 18px 2px;
-      margin-left: 0; margin-right: auto;
-    }
-    .dark .user-message { background-color: #2d3748; }
-    .dark .bot-message { background-color: #4a5568; }
-
-    .progress-container {
-      width: 100%; height: 8px; background-color: #e2e8f0;
-      border-radius: 4px; margin-top: 8px; overflow: hidden;
-    }
-    .progress-bar {
-      height: 100%; border-radius: 4px 0 0 4px; width: 0%;
-      background-color: #4299e1; transition: width 0.3s ease-in-out;
-    }
-    .dark .progress-container { background-color: #2d3748; }
-    .progress-status {
-      margin-top: 5px; font-size: 12px; color: #718096; text-align: center;
-    }
-    .dark .progress-status { color: #a0aec0; }
-
-    .source-link {
-      color: #3182ce; text-decoration: underline; word-break: break-all;
-    }
-    .dark .source-link { color: #90cdf4; }
-    .source-link:hover { text-decoration: none; }
-
-    .ellipsis { display: inline-block; width: 60px; text-align: left; }
-    .typing-dot {
-      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-      background-color: currentColor; margin-right: 4px; animation: typing 1s infinite;
-    }
-    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes typing {
-      0%, 100% { opacity: 0.3; transform: translateY(0); }
-      50% { opacity: 1; transform: translateY(-2px); }
+      background-color: #001100;
+      border: 1px solid #00ff00;
+      border-radius: 18px 18px 18px 2px;
+      margin-left: 0;
+      margin-right: auto;
+      color: #00ff00;
     }
 
-    @media print {
-      .no-print { display: none !important; }
-      body { background-color: #fff; color: #000; }
-      .dark { background-color: #fff; color: #000; }
-      .dark .user-message, .dark .bot-message { background-color: #f1f1f1; color: #000; }
-      .user-message, .bot-message { background-color: #f1f1f1; }
-      .chat-container { height: auto; max-height: none; overflow: visible; }
-      .source-link { color: #0000EE; text-decoration: underline; }
-      .print-break { page-break-before: always; }
-      #chat-form, #progress-section, #theme-toggle { display: none; }
+    /* 버튼, 인풋 등도 어둡고 초록 테두리 */
+    .matrix-input {
+      background-color: #000;
+      border: 1px solid #00ff00;
+      color: #00ff00;
+    }
+    .matrix-button {
+      background-color: #000;
+      border: 1px solid #00ff00;
+      color: #00ff00;
+      transition: opacity 0.2s;
+    }
+    .matrix-button:hover {
+      opacity: 0.8;
+    }
+    .matrix-button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
     }
 
-    #status-list-container {}
+    /* ------------------- 처리 단계(Status) UI ------------------- */
+    #status-list-container {
+      border: 1px solid #008f11;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
     .status-item {
-      display: flex; align-items: center; transition: all 0.3s ease; padding: 0.25rem 0;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s ease;
+      padding: 0.25rem 0;
+      color: #00ff00;
+      font-size: 0.9rem;
     }
     .status-icon {
-      width: 20px; text-align: center; margin-right: 0.5rem; transition: color 0.3s ease;
+      width: 20px;
+      text-align: center;
+      margin-right: 0.5rem;
+      transition: color 0.3s ease;
     }
     .status-label {
       transition: color 0.3s ease, text-decoration 0.3s ease;
     }
     .status-detail {
-      margin-left: 0.5rem; font-size: 0.8rem;
+      margin-left: 0.5rem;
+      font-size: 0.8rem;
+      color: #00ff00;
     }
-    .status-item.status-pending .status-icon { color: #a0aec0; }
-    .status-item.status-pending .status-label { color: #a0aec0; }
-    .status-item.status-pending .status-detail { display: none; }
+    .status-item.status-pending .status-icon {
+      color: #008f11;
+    }
+    .status-item.status-pending .status-label {
+      color: #008f11;
+    }
+    .status-item.status-pending .status-detail {
+      display: none;
+    }
     .status-item.status-active .status-icon {
-      color: #4299e1; animation: spin 1s linear infinite;
+      color: #00ff00;
+      animation: spin 1s linear infinite;
     }
     .status-item.status-active .status-label {
-      font-weight: 600; color: inherit;
+      font-weight: 600;
     }
-    .status-item.status-active .status-detail { display: inline; }
-    .status-item.status-completed .status-icon { color: #48bb78; animation: none; }
+    .status-item.status-active .status-detail {
+      display: inline;
+    }
+    .status-item.status-completed .status-icon {
+      color: #00ff00;
+      animation: none;
+    }
     .status-item.status-completed .status-label {
-      color: #718096; text-decoration: line-through;
+      color: #008f11;
+      text-decoration: line-through;
     }
-    .status-item.status-completed .status-detail { display: none; }
+    .status-item.status-completed .status-detail {
+      display: none;
+    }
     @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* 링크 스타일 */
+    .source-link {
+      color: #00ff00;
+      text-decoration: underline;
+      word-break: break-all;
+    }
+    .source-link:hover {
+      text-decoration: none;
+      opacity: 0.9;
+    }
+
+    /* 인쇄 스타일 */
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background-color: #fff !important;
+        color: #000 !important;
+        font-family: sans-serif !important;
+      }
+      .chat-container {
+        height: auto;
+        max-height: none;
+        overflow: visible;
+      }
+      .user-message, .bot-message {
+        background-color: #f1f1f1 !important;
+        color: #000 !important;
+        border: 1px solid #ddd !important;
+      }
+      .source-link {
+        color: #0000EE !important;
+        text-decoration: underline !important;
+      }
+      .print-break {
+        page-break-before: always;
+      }
+      #chat-form {
+        display: none !important;
+      }
+      #status-list-container {
+        display: none !important;
+      }
     }
   </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body>
 <div class="container mx-auto px-4 py-8 max-w-6xl">
+  <!-- 상단 영역 -->
   <div class="flex justify-between items-center mb-6 no-print">
-    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">검색 기반 Gemini 챗봇</h1>
-    <div class="flex space-x-4">
-      <button id="theme-toggle"
-              class="px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-500">
-        <i class="fas fa-moon"></i>
-      </button>
-      <button onclick="window.print()"
-              class="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <i class="fas fa-print"></i>
-      </button>
-    </div>
+    <h1 class="text-3xl font-bold">
+      검색 기반 Gemini 챗봇 (Matrix Style)
+    </h1>
+    <button onclick="window.print()"
+            class="matrix-button px-3 py-2 rounded-md focus:outline-none">
+      <i class="fas fa-print"></i> 인쇄
+    </button>
   </div>
 
-  <div id="chat-box" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-    <div id="chat-messages" class="chat-container p-4 overflow-y-auto space-y-4">
-      <div class="bot-message p-4 text-gray-800 dark:text-gray-200 max-w-3xl">
-        <p>안녕하세요! 검색 기반 Gemini 챗봇입니다. 궁금한 점이 있으시면 질문해주세요. 제가 구글 검색과 웹페이지 분석(실패 시 요약 정보 활용)을 통해 답변해 드리겠습니다.</p>
+  <!-- 채팅 전체 박스 -->
+  <div id="chat-box"
+       class="bg-black rounded-lg shadow-lg overflow-hidden"
+       style="border: 1px solid #008f11;">
+
+    <!-- 채팅 메시지 + (처리과정 표시 UI가 들어갈) 영역 -->
+    <div id="chat-messages" class="chat-container p-4 space-y-4">
+      <!-- 초기 안내 메시지 -->
+      <div class="bot-message p-4">
+        안녕하세요! 검색 기반 Gemini 챗봇입니다. 궁금한 점이 있으시면 질문해 주세요.
       </div>
     </div>
 
-    <div id="chat-form" class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 no-print">
+    <!-- 입력 폼 -->
+    <div id="chat-form" class="p-4 border-t border-gray-200 no-print">
       <div class="max-w-3xl mx-auto">
-        <div id="progress-section" class="mb-3 hidden">
-          <div id="progress-status" class="progress-status"></div>
-          <div class="progress-container">
-            <div id="progress-bar" class="progress-bar"></div>
-          </div>
-        </div>
         <div class="flex space-x-2">
           <input type="text" id="user-input"
-                 class="flex-grow px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                 class="matrix-input flex-grow px-4 py-2 rounded-l-md shadow-sm focus:outline-none"
                  placeholder="질문을 입력하세요...">
           <button id="send-button"
-                  class="px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  class="matrix-button px-4 py-2 rounded-r-md focus:outline-none disabled:opacity-50"
                   aria-label="Send message">
             <i class="fas fa-paper-plane"></i>
           </button>
         </div>
       </div>
     </div>
+
   </div>
 
-  <div class="mt-6 text-sm text-gray-600 dark:text-gray-400 text-center no-print">
+  <!-- 하단 영역 -->
+  <div class="mt-6 text-center no-print">
     <p>© 2025 검색 기반 Gemini 챗봇 by 수현</p>
   </div>
 </div>
+
 <script>
     // --- Basic Setup ---
     const DEBUG = true;
@@ -189,36 +281,7 @@
     const chatMessages = document.getElementById('chat-messages');
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    const body = document.body;
     const chatForm = document.getElementById('chat-form');
-
-    // --- Dark Mode ---
-    function applyTheme(isDark) {
-        if (isDark) {
-            body.classList.add('dark');
-            themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
-        } else {
-            body.classList.remove('dark');
-            themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
-        }
-    }
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-    let currentModeIsDark = localStorage.getItem('dark-mode') === 'true'
-        || (localStorage.getItem('dark-mode') === null && prefersDark.matches);
-    applyTheme(currentModeIsDark);
-
-    themeToggleBtn.addEventListener('click', () => {
-        currentModeIsDark = !currentModeIsDark;
-        localStorage.setItem('dark-mode', currentModeIsDark ? 'true' : 'false');
-        applyTheme(currentModeIsDark);
-    });
-    prefersDark.addEventListener('change', (e) => {
-        if (localStorage.getItem('dark-mode') === null) {
-            currentModeIsDark = e.matches;
-            applyTheme(currentModeIsDark);
-        }
-    });
 
     // --- Cache System ---
     const cache = {
@@ -267,20 +330,20 @@
 
     function addUserMessage(message) {
         const messageDiv = document.createElement('div');
-        messageDiv.className = 'user-message p-3 md:p-4 text-gray-800 dark:text-gray-200 max-w-3xl ml-auto mb-4';
+        messageDiv.className = 'user-message p-3 md:p-4 max-w-3xl ml-auto mb-4';
         messageDiv.innerHTML = `<p>${escapeHtml(message)}</p>`;
         chatMessages.appendChild(messageDiv);
         scrollToBottom();
     }
 
     function addBotMessage(message, isHTML = false) {
-        removeStatusUI(); // 상태 UI 제거(최종 메세지 전)
+        removeStatusUI(); // 상태 UI 제거(최종 메시지 출력 시)
 
         const messageDiv = document.createElement('div');
-        messageDiv.className = 'bot-message p-3 md:p-4 text-gray-800 dark:text-gray-200 max-w-3xl mr-auto mb-4';
+        messageDiv.className = 'bot-message p-3 md:p-4 max-w-3xl mr-auto mb-4';
 
         if (isHTML) {
-            // 간단한 스크립트 태그 제거
+            // 스크립트 태그 제거
             const sanitizedHTML = message.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
             messageDiv.innerHTML = sanitizedHTML;
         } else {
@@ -309,13 +372,14 @@
 
     function createStatusUI() {
         removeStatusUI();
+
         const container = document.createElement('div');
         container.id = 'status-list-container';
         container.className = 'mb-3';
 
         const list = document.createElement('ul');
         list.id = 'status-list';
-        list.className = 'space-y-1 text-sm';
+        list.className = 'space-y-1';
 
         statusSteps.forEach(step => {
             const item = document.createElement('li');
@@ -324,18 +388,16 @@
             item.innerHTML = `
                 <span class="status-icon"><i class="far fa-circle"></i></span>
                 <span class="status-label">${escapeHtml(step.label)}</span>
-                <span class="status-detail text-gray-500 dark:text-gray-400 ml-2"></span>
+                <span class="status-detail ml-2"></span>
             `;
             list.appendChild(item);
         });
 
         container.appendChild(list);
-        const formInnerDiv = chatForm.querySelector('.max-w-3xl');
-        if (formInnerDiv) {
-            formInnerDiv.insertBefore(container, formInnerDiv.firstChild);
-        } else {
-            chatForm.appendChild(container);
-        }
+
+        // 처리 과정 표시 영역을 "채팅창(답변 출력) 내부"에 삽입
+        chatMessages.appendChild(container);
+        scrollToBottom();
     }
 
     function updateStatusUI(step, status, detailText = '') {
@@ -379,6 +441,7 @@
                 }
             }
         }
+        scrollToBottom();
     }
 
     function removeStatusUI() {
@@ -392,17 +455,15 @@
         if (isLoading) {
             sendButton.disabled = true;
             userInput.disabled = true;
-            sendButton.classList.add('disabled:opacity-50');
             createStatusUI();
         } else {
             sendButton.disabled = false;
             userInput.disabled = false;
-            sendButton.classList.remove('disabled:opacity-50');
-            // 최종 봇메세지 추가 시 removeStatusUI()가 별도 호출
+            // 최종 봇메시지 추가 시 removeStatusUI() 별도 호출
         }
     }
 
-    // --- Web Crawling 관련 로직은 동일 ---
+    // --- Web Crawling 관련 로직 ---
     const PROXY_COOLDOWN_MS = 3 * 60 * 1000;
     const proxies = [
         { name: 'corsproxy.io', url: (targetUrl) => `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, cooldownUntil: 0 },
@@ -610,7 +671,7 @@
         updateStatusUI(currentStep, 'active', `웹페이지 분석 시작 (0/${totalSites})...`);
 
         let completedCount = 0;
-        const crawlPromises = pagesToCrawl.map(async (pageInfo, index) => {
+        const crawlPromises = pagesToCrawl.map(async (pageInfo) => {
             try {
                 const content = await crawlWebpage(pageInfo.link);
                 completedCount++;
@@ -781,7 +842,7 @@ ${initialAnswer.substring(0, 500)}...
         const validSources = [];
         let sourceCounter = 0;
 
-        const addResultsToContext = (results, prefix = "") => {
+        const addResultsToContext = (results) => {
             results.forEach((r) => {
                 sourceCounter++;
                 const sourceNum = sourceCounter;
@@ -793,16 +854,16 @@ ${initialAnswer.substring(0, 500)}...
                 const isSnippet = r.content?.startsWith('[스니펫 요약]');
 
                 if ((!isFailure || isSnippet) && r.content?.trim()) {
-                    context += `[출처 ${sourceNum}: ${prefix}${r.title}]\n${r.content}\n\n---\n\n`;
+                    context += `[출처 ${sourceNum}: ${r.title}]\n${r.content}\n\n---\n\n`;
                     validSources.push({ ...r, sourceNum });
                 }
             });
         };
 
-        addResultsToContext(processedResults.initial, "");
+        addResultsToContext(processedResults.initial);
         if (isFinalResponse && processedResults.followUp && processedResults.followUp.length > 0) {
             context += "\n\n===== 추가 검색 결과 =====\n\n";
-            addResultsToContext(processedResults.followUp, "");
+            addResultsToContext(processedResults.followUp);
         }
 
         if (!context) {
@@ -990,13 +1051,14 @@ ${isFinalResponse ? "이것은 최종 답변입니다. (추가 검색결과 포�
                 return;
             }
             updateStatusUI(5, 'completed', '답변 준비 완료!');
+
             const finalAnswerHtml = finalGeminiResult.answer;
             const botMsgEl = addBotMessage(finalAnswerHtml, true);
 
             // 원본 검색 결과 리스트 표시
             if (botMsgEl && allOriginalSearchResults.length) {
                 const sourcesDiv = document.createElement('div');
-                sourcesDiv.className = 'mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 no-print';
+                sourcesDiv.className = 'mt-4 pt-4 border-t border-gray-200 text-sm no-print';
                 let sourcesHtml = `<p class="font-medium mb-2">참고한 원본 검색 결과 (1차 및 2차 포함):</p><ul class="list-disc list-inside space-y-1">`;
                 const linkSet = new Set();
                 allOriginalSearchResults.forEach(res => {
