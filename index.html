@@ -231,7 +231,7 @@ function log(...args) {
 }
 
 // config.js에서 설정된 API 키들
-const googleSearchConfigs = (window.apiKeys && Array.isArray(window.apiKeys.Google Search_CONFIGS))
+const googleSearchConfigs = (window.apiKeys && Array.isArray(window.apiKeys['Google Search_CONFIGS']))
     ? window.apiKeys['Google Search_CONFIGS']
     : [];
 const geminiApiKey = window.apiKeys?.GEMINI_API_KEY;
