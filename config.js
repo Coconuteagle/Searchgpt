@@ -16,7 +16,8 @@ window.apiKeys = {
     {
       googleApiKey: "",
       searchEngineId: ""
-      {
+    },
+    {
       googleApiKey: "",
       searchEngineId: ""
     },
