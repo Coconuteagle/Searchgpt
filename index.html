@@ -2,9 +2,9 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>검색 기반 Gemini 챗봇 (Retro Monitor Style)</title>
+  <title>검색 기반 Gemini 챗봇 (Retro CRT Style)</title>
 
-  <!-- Tailwind / FontAwesome -->
+  <!-- Tailwind / FontAwesome (Optionally needed for icons) -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
 
@@ -12,41 +12,94 @@
   <script src="config.js"></script>
 
   <style>
-    /* ------------------- 전체 레트로 모니터 테마 (옛날 CRT 느낌) ------------------- */
+    /* 전체 배경: 검정, 텍스트 기본: 초록색, CRT 폰트 느낌 */
     body {
-      background-color: #0a0a0a; /* 완전 검정보다 조금 연함 */
-      color: #00ff00;           /* 그린 포스포 느낌 */
-      font-family: Consolas, 'Courier New', monospace;
-      margin: 0;
-      padding: 0;
-    }
-
-    /* 레트로 모니터 테두리 느낌을 내기 위한 container */
-    .retro-monitor {
-      /* 두툼한 테두리 + 옛날 모니터 분위기 */
-      border: 12px groove #005500;
-      border-radius: 8px; 
-      box-shadow: inset 0 0 20px rgba(0, 128, 0, 0.5); /* 화면 안쪽에서 번지는 빛 느낌 */
-    }
-
-    /* 채팅 영역 안쪽 색상, 테두리 살짝 */
-    .chat-box-inner {
-      background-color: #000000; 
-      border: 1px solid #007700; 
-    }
-
-    /* 링크, 버튼 등도 기본은 초록, hover 시 조금 어둡게 */
-    a, button {
+      background-color: #000000;
       color: #00ff00;
-      text-decoration: none;
+      font-family: 'Lucida Console', 'Courier New', monospace;
+      margin: 0; padding: 0;
     }
-    a:hover, button:hover {
+
+    /* CRT 테두리를 위한 컨테이너 */
+    .crt-container {
+      border: 10px solid #00ff00; /* 두꺼운 초록 테두리 */
+      border-radius: 4px;
+      box-sizing: border-box;
+      padding: 8px;
+    }
+
+    /* 채팅 영역 박스 (메시지 표시용) */
+    .chat-box {
+      border: 1px solid #00ff00;
+      background-color: #000000;
+      height: calc(100vh - 180px);
+      min-height: 400px;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    /* 유저 / 봇 메시지 공통 */
+    .user-message,
+    .bot-message {
+      max-width: 60%;
+      margin-bottom: 12px;
+      border: 1px solid #00ff00;
+      border-radius: 8px;
+      padding: 8px;
+      color: #00ff00;
+      word-break: break-word;
+      line-height: 1.4;
+    }
+
+    /* 유저 메시지 (오른쪽) */
+    .user-message {
+      background-color: #001500; /* 짙은 녹색 톤 배경 */
+      margin-left: auto;
+      margin-right: 0;
+    }
+
+    /* 봇 메시지 (왼쪽) */
+    .bot-message {
+      background-color: #000a00;
+      margin-left: 0;
+      margin-right: auto;
+    }
+
+    /* 입력창 영역 */
+    .chat-input-container {
+      border-top: 1px solid #00ff00;
+      padding: 8px;
+    }
+    .chat-input {
+      background-color: #000000;
+      color: #00ff00;
+      font-family: inherit;
+      border: 1px solid #00ff00;
+      padding: 8px;
+      width: calc(100% - 60px);
+      outline: none;
+      box-sizing: border-box;
+    }
+    .chat-send-button {
+      background-color: #000000;
+      color: #00ff00;
+      font-family: inherit;
+      border: 1px solid #00ff00;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .chat-send-button:hover {
       opacity: 0.8;
     }
+    .chat-send-button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
 
-    /* 출처/링크 부분은 다른 색상(금색 느낌)으로 구분 */
+    /* 출처 링크는 파란색 */
     .source-link {
-      color: #FFD700;
+      color: #0000ff;
       text-decoration: underline;
       word-break: break-all;
     }
@@ -55,72 +108,15 @@
       opacity: 0.9;
     }
 
-    /* 컨테이너, bg-white 등 Tailwind default 스타일 오버라이드 */
-    .bg-white,
-    .rounded-lg,
-    .shadow-lg {
-      background-color: #000000 !important;
-      box-shadow: none !important; /* 그림자 제거 */
-    }
-
-    /* 입력창, 버튼에 레트로 녹색 라인 */
-    .matrix-input {
-      background-color: #000000;
-      border: 1px solid #00ff00;
-      color: #00ff00;
-      font-family: inherit;
-    }
-    .matrix-button {
-      background-color: #000000;
-      border: 1px solid #00ff00;
-      color: #00ff00;
-      font-family: inherit;
-      transition: opacity 0.2s;
-    }
-    .matrix-button:hover {
-      opacity: 0.8;
-    }
-    .matrix-button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    /* 채팅 영역 높이 조절 */
-    .chat-container {
-      height: calc(100vh - 220px);
-      min-height: 400px;
-      overflow-y: auto; /* 자동 스크롤 (수동 확인) */
-      padding-right: 4px; /* 스크롤바와 내용 간격 */
-    }
-
-    /* 유저/봇 메시지 */
-    .user-message {
-      background-color: #001800; /* 완전 검정보다는 살짝 연한 톤 */
-      border: 1px solid #00ff00;
-      border-radius: 18px 18px 2px 18px;
-      margin-left: auto;
-      margin-right: 0;
-      color: #00ff00;
-    }
-    .bot-message {
-      background-color: #000f00;
-      border: 1px solid #00ff00;
-      border-radius: 18px 18px 18px 2px;
-      margin-left: 0;
-      margin-right: auto;
-      color: #00ff00;
-    }
-
-    /* 처리 과정(Status) UI - 본문에 표시 */
+    /* 처리단계(Status) UI */
     #status-list-container {
-      border: 1px dashed #007700;
+      border: 1px dashed #00ff00;
       padding: 8px;
       margin-bottom: 8px;
     }
     .status-item {
       display: flex;
       align-items: center;
-      transition: all 0.3s ease;
       padding: 0.25rem 0;
       color: #00ff00;
       font-size: 0.9rem;
@@ -129,883 +125,772 @@
       width: 20px;
       text-align: center;
       margin-right: 0.5rem;
-      transition: color 0.3s ease;
     }
-    .status-label {
-      transition: color 0.3s ease, text-decoration 0.3s ease;
-    }
-    .status-detail {
-      margin-left: 0.5rem;
-      font-size: 0.8rem;
-      color: #00ff00;
-    }
-    .status-item.status-pending .status-icon {
+    .status-item.status-pending .status-icon i {
       color: #004400;
     }
-    .status-item.status-pending .status-label {
-      color: #004400;
-    }
-    .status-item.status-pending .status-detail {
-      display: none;
-    }
-    .status-item.status-active .status-icon {
+    .status-item.status-active .status-icon i {
       color: #00ff00;
       animation: spin 1s linear infinite;
     }
-    .status-item.status-active .status-label {
-      font-weight: 600;
-    }
-    .status-item.status-active .status-detail {
-      display: inline;
-    }
-    .status-item.status-completed .status-icon {
+    .status-item.status-completed .status-icon i {
       color: #00ff00;
       animation: none;
-    }
-    .status-item.status-completed .status-label {
-      color: #008f11;
-      text-decoration: line-through;
-    }
-    .status-item.status-completed .status-detail {
-      display: none;
     }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    .status-item.status-completed .status-label {
+      text-decoration: line-through;
+      color: #008f11;
+    }
 
-    /* 인쇄 시 스타일 */
+    /* 인쇄시(필요하면) */
     @media print {
       .no-print { display: none !important; }
       body {
-        background-color: #fff !important;
+        background: #fff !important;
         color: #000 !important;
         font-family: sans-serif !important;
       }
-      .chat-container {
-        height: auto;
-        max-height: none;
-        overflow: visible;
-      }
-      .user-message, .bot-message {
-        background-color: #f1f1f1 !important;
+      .crt-container, .chat-box, .user-message, .bot-message {
+        border: 1px solid #ccc !important;
+        background-color: #fff !important;
         color: #000 !important;
-        border: 1px solid #ddd !important;
       }
       .source-link {
-        color: #0000EE !important;
-        text-decoration: underline !important;
+        color: #0000ee !important;
       }
-      #chat-form,
-      #status-list-container {
+      #status-list-container, .chat-input-container {
         display: none !important;
       }
     }
   </style>
 </head>
+
 <body>
-<div class="container mx-auto px-4 py-4 max-w-6xl retro-monitor">
-  <!-- 상단 영역 -->
-  <div class="flex justify-between items-center mb-6 no-print">
-    <h1 class="text-3xl font-bold" style="color:#00ff00;">검색 기반 Gemini 챗봇 (Retro Monitor Style)</h1>
-    <button onclick="window.print()"
-            class="matrix-button px-3 py-2 rounded-md focus:outline-none">
-      <i class="fas fa-print"></i> 인쇄
-    </button>
+<div class="container mx-auto px-4 py-4 max-w-5xl crt-container">
+  <!-- 상단 영역 (인쇄 버튼 없음) -->
+  <h1 class="text-2xl mb-4" style="color:#00ff00;">Matrix Search</h1>
+
+  <!-- 채팅 표시 영역 -->
+  <div id="chat-box" class="chat-box">
+    <!-- 초기 안내 메시지 -->
+    <div class="bot-message">
+      Hello, neo. 
+    </div>
   </div>
 
-  <!-- 채팅 전체 박스 -->
-  <div class="chat-box-inner rounded-lg overflow-hidden">
-    <!-- 채팅 메시지 + (처리 과정 표시 UI가 들어갈) 영역 -->
-    <div id="chat-messages" class="chat-container p-4 space-y-4">
-      <!-- 초기 안내 메시지 -->
-      <div class="bot-message p-4">
-        안녕하세요! 검색 기반 Gemini 챗봇입니다. 궁금한 점이 있으시면 질문해 주세요.
-      </div>
-    </div>
-
-    <!-- 입력 폼 -->
-    <div id="chat-form" class="p-4 border-t border-gray-700 no-print">
-      <div class="max-w-3xl mx-auto">
-        <div class="flex space-x-2">
-          <input type="text" id="user-input"
-                 class="matrix-input flex-grow px-4 py-2 rounded-l-md shadow-sm focus:outline-none"
-                 placeholder="질문을 입력하세요...">
-          <button id="send-button"
-                  class="matrix-button px-4 py-2 rounded-r-md focus:outline-none disabled:opacity-50"
-                  aria-label="Send message">
-            <i class="fas fa-paper-plane"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-
+  <!-- 입력창 영역 -->
+  <div class="chat-input-container no-print">
+    <input type="text" id="user-input" class="chat-input" placeholder="what's the problem?">
+    <button id="send-button" class="chat-send-button">전송</button>
   </div>
 
-  <!-- 하단 영역 -->
-  <div class="mt-6 text-center no-print" style="color:#00ff00;">
-    <p>© 2025 검색 기반 Gemini 챗봇 by 수현</p>
+  <!-- 하단 안내 -->
+  <div class="mt-3 text-sm" style="color:#00ff00;">
+    © Matrix Search by 수현
   </div>
 </div>
 
 <script>
-    // --- Basic Setup ---
-    const DEBUG = true;
-    function log(...args) {
-        if (DEBUG) {
-            console.log(`[챗봇 로그 ${new Date().toLocaleTimeString()}]`, ...args);
+  /* ======== CONFIG & BASIC SETUP ======== */
+  const DEBUG = true;
+  function log(...args) {
+    if (DEBUG) {
+      console.log(`[챗봇 로그 ${new Date().toLocaleTimeString()}]`, ...args);
+    }
+  }
+
+  // config.js에서 설정된 API 키들
+  const googleSearchConfigs = (window.apiKeys && Array.isArray(window.apiKeys.GOOGLE_SEARCH_CONFIGS))
+      ? window.apiKeys.GOOGLE_SEARCH_CONFIGS
+      : [];
+  const geminiApiKey = window.apiKeys?.GEMINI_API_KEY;
+  let currentSearchConfigIndex = 0;
+
+  if (!geminiApiKey) {
+    console.error("Gemini API Key가 설정되지 않았습니다.");
+    alert("Gemini API Key가 설정되지 않았습니다. config.js를 확인하세요.");
+  }
+  if (!googleSearchConfigs.length) {
+    console.error("Google Search Key/엔진 ID가 없습니다.");
+    alert("Google Search Key/엔진 ID가 없습니다. config.js를 확인하세요.");
+  }
+
+  // DOM Elements
+  const chatBox = document.getElementById('chat-box');
+  const userInput = document.getElementById('user-input');
+  const sendButton = document.getElementById('send-button');
+
+  // 캐시 (검색 결과, 크롤링 결과)
+  const cache = {
+    search: new Map(),
+    crawl: new Map(),
+    maxAge: 30 * 60 * 1000, // 30분
+    getSearch(query) {
+      const entry = this.search.get(query);
+      if (entry && (Date.now() - entry.timestamp < this.maxAge)) {
+        return entry.data;
+      }
+      return null;
+    },
+    setSearch(query, data) {
+      this.search.set(query, { data, timestamp: Date.now() });
+    },
+    getCrawl(url) {
+      const entry = this.crawl.get(url);
+      if (entry && (Date.now() - entry.timestamp < this.maxAge)) {
+        return entry.data;
+      }
+      return null;
+    },
+    setCrawl(url, data) {
+      this.crawl.set(url, { data, timestamp: Date.now() });
+    }
+  };
+
+  // --- 메시지 출력 함수 ---
+  function escapeHtml(unsafe) {
+    if (typeof unsafe !== 'string') return '';
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  // 사용자 메시지 (화면 오른쪽)
+  function addUserMessage(text) {
+    const div = document.createElement('div');
+    div.className = 'user-message';
+    div.textContent = text;
+    chatBox.appendChild(div);
+    
+    // "사용자 메시지가 최상단" → scrollIntoView({ block: 'start' })
+    // (이 메시지가 막 추가되었을 때, 해당 메시지를 화면 맨 위에 위치)
+    div.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+
+  // 봇 메시지 (화면 왼쪽)
+  function addBotMessage(html) {
+    removeStatusUI(); // 새 봇메시지 시점에 기존 상태창 제거 (디자인상)
+
+    const div = document.createElement('div');
+    div.className = 'bot-message';
+    const sanitized = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    div.innerHTML = sanitized;
+    chatBox.appendChild(div);
+
+    // 봇 메시지는 자동 스크롤하지 않으므로, 사용자가 직접 스크롤해야 볼 수 있음
+  }
+
+  // --- 상태(Status) UI ---
+  function createStatusUI() {
+    removeStatusUI();
+    const container = document.createElement('div');
+    container.id = 'status-list-container';
+
+    // 예시: 5단계까지 있으면 필요에 맞게 수정
+    const listHtml = `
+      <ul id="status-list">
+        <li class="status-item status-pending" data-step="1">
+          <span class="status-icon"><i class="far fa-circle"></i></span>
+          <span class="status-label">1단계: 초기 정보 검색</span>
+        </li>
+        <li class="status-item status-pending" data-step="2">
+          <span class="status-icon"><i class="far fa-circle"></i></span>
+          <span class="status-label">2단계: 초기 정보 분석</span>
+        </li>
+        <li class="status-item status-pending" data-step="3">
+          <span class="status-icon"><i class="far fa-circle"></i></span>
+          <span class="status-label">3단계: 추가 탐색 준비</span>
+        </li>
+        <li class="status-item status-pending" data-step="4">
+          <span class="status-icon"><i class="far fa-circle"></i></span>
+          <span class="status-label">4단계: 추가 정보 검색/분석</span>
+        </li>
+        <li class="status-item status-pending" data-step="5">
+          <span class="status-icon"><i class="far fa-circle"></i></span>
+          <span class="status-label">5단계: 종합 답변</span>
+        </li>
+      </ul>`;
+    container.innerHTML = listHtml;
+
+    chatBox.appendChild(container);
+  }
+
+  function updateStatusUI(step, status, detail = '') {
+    const container = document.getElementById('status-list-container');
+    if (!container) return;
+    const item = container.querySelector(`.status-item[data-step="${step}"]`);
+    if (!item) return;
+
+    item.classList.remove('status-pending', 'status-active', 'status-completed');
+    item.classList.add(`status-${status}`);
+
+    const icon = item.querySelector('.status-icon i');
+    if (icon) {
+      if (status === 'active') {
+        icon.className = 'fas fa-spinner fa-spin';
+      } else if (status === 'completed') {
+        icon.className = 'fas fa-check-circle';
+      } else {
+        icon.className = 'far fa-circle';
+      }
+    }
+    // 이전 단계 자동 완료
+    if (status === 'active' || status === 'completed') {
+      for (let i = 1; i < step; i++) {
+        const prev = container.querySelector(`.status-item[data-step="${i}"]`);
+        if (prev && !prev.classList.contains('status-completed')) {
+          prev.classList.remove('status-pending', 'status-active');
+          prev.classList.add('status-completed');
+          const prevIcon = prev.querySelector('.status-icon i');
+          if (prevIcon) prevIcon.className = 'fas fa-check-circle';
         }
+      }
     }
+  }
 
-    // 여러 개의 Google Search Key/ID 설정
-    const googleSearchConfigs = (window.apiKeys && Array.isArray(window.apiKeys.GOOGLE_SEARCH_CONFIGS))
-        ? window.apiKeys.GOOGLE_SEARCH_CONFIGS
-        : [];
-    let currentSearchConfigIndex = 0; // 현재 사용중인 Search Config 인덱스
-    const geminiApiKey = window.apiKeys?.GEMINI_API_KEY; // Gemini API Key
+  function removeStatusUI() {
+    const el = document.getElementById('status-list-container');
+    if (el) el.remove();
+  }
 
-    if (!geminiApiKey) {
-        console.error("Gemini API Key가 config.js에서 주어지지 않았습니다.");
-        alert("Gemini API Key가 설정되지 않았습니다. config.js 파일을 확인하세요.");
+  // --- 로딩 상태 (입력잠금/해제) ---
+  function setLoadingState(isLoading) {
+    if (isLoading) {
+      userInput.disabled = true;
+      sendButton.disabled = true;
+      createStatusUI();
+    } else {
+      userInput.disabled = false;
+      sendButton.disabled = false;
+      userInput.focus();
     }
-    if (!googleSearchConfigs.length) {
-        console.error("Google Search API Key/엔진 ID 세트가 하나도 없습니다.");
-        alert("검색 API 키/엔진 ID 정보가 없습니다. config.js 파일을 확인하세요.");
+  }
+
+  /* ======== GOOGLE SEARCH / CRAWLING ======== */
+  // (간단히 기존 로직 복붙)
+
+  const PROXY_COOLDOWN_MS = 3 * 60 * 1000;
+  const proxies = [
+    {
+      name: 'corsproxy.io',
+      url: (targetUrl) => `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+      cooldownUntil: 0
+    },
+    {
+      name: 'allorigins',
+      url: (targetUrl) => `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+      cooldownUntil: 0
+    },
+  ];
+
+  async function googleSearch(query, numResults = 8, attempt = 0) {
+    if (currentSearchConfigIndex >= googleSearchConfigs.length) {
+      throw new Error("Google 검색 API: 모든 키/엔진 세트 소진");
     }
+    const cached = cache.getSearch(query);
+    if (cached) {
+      log('Search cache hit for:', query);
+      return cached;
+    }
+    const { googleApiKey, searchEngineId } = googleSearchConfigs[currentSearchConfigIndex];
+    if (!googleApiKey || !searchEngineId) {
+      throw new Error(`Google Search config invalid (index: ${currentSearchConfigIndex})`);
+    }
+    const url = `https://www.googleapis.com/customsearch/v1?key=${googleApiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query)}&num=${numResults}`;
 
-    // DOM Elements
-    const chatMessages = document.getElementById('chat-messages');
-    const userInput = document.getElementById('user-input');
-    const sendButton = document.getElementById('send-button');
-
-    // 메시지, 크롤링 데이터 캐시
-    const cache = {
-        search: new Map(),
-        crawl: new Map(),
-        maxAge: 30 * 60 * 1000,
-        getSearch(query) {
-            const item = this.search.get(query);
-            if (item && (Date.now() - item.timestamp < this.maxAge)) {
-                log('Search cache hit:', query);
-                return item.data;
-            }
-            return null;
-        },
-        setSearch(query, data) {
-            this.search.set(query, { data, timestamp: Date.now() });
-        },
-        getCrawl(url) {
-            const item = this.crawl.get(url);
-            if (item && (Date.now() - item.timestamp < this.maxAge)) {
-                return item.data;
-            }
-            return null;
-        },
-        setCrawl(url, data) {
-            this.crawl.set(url, { data, timestamp: Date.now() });
+    try {
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if (!resp.ok || data.error) {
+        const msg = data.error ? data.error.message : `HTTP ${resp.status}`;
+        // Quota exceeded or limit
+        if (msg.includes("Quota exceeded") || msg.includes("limit") || resp.status === 403) {
+          currentSearchConfigIndex++;
+          return googleSearch(query, numResults, attempt + 1);
         }
+        throw new Error(`GoogleSearch 실패: ${msg}`);
+      }
+      if (!data.items || !data.items.length) {
+        cache.setSearch(query, []);
+        return [];
+      }
+      const results = data.items.map(item => ({
+        title: item.title,
+        link: item.link,
+        snippet: item.snippet
+      }));
+      cache.setSearch(query, results);
+      return results;
+    } catch (err) {
+      if (err.message.includes("Quota exceeded") || err.message.includes("limit") || err.message.includes("403")) {
+        currentSearchConfigIndex++;
+        return googleSearch(query, numResults, attempt+1);
+      }
+      throw err;
+    }
+  }
+
+  async function crawlWebpage(url, attempt = 0) {
+    // 캐시 체크
+    const cached = cache.getCrawl(url);
+    if (cached) return cached;
+
+    const availableProxies = proxies.filter(p => Date.now() >= (p.cooldownUntil || 0));
+    if (!availableProxies.length) {
+      return `크롤링 실패 (모든 프록시 쿨다운) ${url}`;
+    }
+    const maxRetries = availableProxies.length;
+    if (attempt >= maxRetries) {
+      return `크롤링 실패 (최대 재시도) ${url}`;
+    }
+    const proxy = availableProxies[attempt];
+
+    try {
+      if (!url || !url.startsWith('http')) {
+        throw new Error(`유효하지 않은 URL: ${url}`);
+      }
+      // 확장자 검사
+      const path = url.split('?')[0];
+      const fileExt = path.includes('.') ? path.split('.').pop().toLowerCase() : '';
+      const nonHtml = ['pdf','doc','docx','ppt','pptx','xls','xlsx','zip','rar','jpg','jpeg','png','gif','webp','svg','mp3','mp4','avi','mov','exe','dmg'];
+      if (nonHtml.includes(fileExt)) {
+        return `크롤링 건너뜀 (파일) ${url}`;
+      }
+
+      const ctrl = new AbortController();
+      const tId = setTimeout(() => ctrl.abort(), 15000);
+      const proxyUrl = proxy.url(url);
+      const headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Upgrade-Insecure-Requests': '1'
+      };
+      const resp = await fetch(proxyUrl, { signal: ctrl.signal, headers, mode: 'cors' });
+      clearTimeout(tId);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+      const ctype = resp.headers.get('content-type') || '';
+      if (!ctype.includes('text/html') && !ctype.includes('application/xhtml+xml') && !ctype.includes('text/plain')) {
+        // JSON, XML 등
+        if (ctype.includes('application/json')) {
+          const json = await resp.json();
+          const text = `JSON:\n${JSON.stringify(json, null, 2)}`.substring(0,8000);
+          cache.setCrawl(url, text);
+          return text;
+        } else if (ctype.includes('xml') && !ctype.includes('xhtml')) {
+          const xmltxt = await resp.text();
+          const text = `XML:\n${xmltxt}`.substring(0,8000);
+          cache.setCrawl(url, text);
+          return text;
+        }
+        return `지원하지 않는 타입 (${ctype}) ${url}`;
+      }
+
+      const html = await resp.text();
+      if (!html.trim()) throw new Error("빈 응답");
+
+      // DOM Parsing
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const title = doc.querySelector('title')?.textContent.trim() || url;
+      const desc = doc.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() || '';
+
+      // 스크립트/스타일 등 제거
+      const removeSelectors = [
+        'script','style','svg','img','picture','video','audio','iframe','nav','header','footer','aside','form',
+        'noscript','button','input','select','textarea','label','canvas','map','object','embed','.advertisement',
+        '.ad','#ad','.banner','.popup','.modal','.sidebar','.social-links','.share-buttons','.cookie-consent',
+        '[aria-hidden="true"]'
+      ];
+      removeSelectors.forEach(sel => {
+        doc.querySelectorAll(sel).forEach(el => el.remove());
+      });
+
+      let main = doc.querySelector('main')
+        || doc.querySelector('article')
+        || doc.querySelector('[role="main"]')
+        || doc.querySelector('.content, .main-content, .post-content, .entry-content, #content, #main, .article-body, .entry, .page-content');
+      if (!main || main.textContent.trim().length < 100) {
+        main = doc.body;
+      }
+
+      function extractTextNodes(node) {
+        let nodeText = '';
+        if (!node) return nodeText;
+        const blockTags = ['p','h1','h2','h3','h4','h5','h6','li','blockquote','pre','div','td'];
+        for (const child of node.childNodes) {
+          if (child.nodeType === Node.TEXT_NODE) {
+            nodeText += child.textContent;
+          } else if (child.nodeType === Node.ELEMENT_NODE) {
+            const tName = child.tagName.toLowerCase();
+            let dsp = 'inline';
+            try {
+              dsp = window.getComputedStyle(child).display;
+            } catch {}
+            const isBlock = blockTags.includes(tName) || dsp.includes('block') || dsp.includes('list-item');
+            if (isBlock && !nodeText.endsWith('\n')) nodeText += '\n';
+            nodeText += extractTextNodes(child);
+            if (isBlock && !nodeText.endsWith('\n')) nodeText += '\n';
+          }
+        }
+        return nodeText;
+      }
+
+      let text = extractTextNodes(main);
+      text = text.replace(/(\s*\n\s*){3,}/g, '\n\n')
+                 .replace(/[ \t]{2,}/g, ' ')
+                 .replace(/^\s+|\s+$/gm, '')
+                 .trim();
+      text = `제목: ${title}\n${desc ? '설명: ' + desc + '\n' : ''}\n---\n\n${text}`;
+      if (text.length > 8000) {
+        text = text.substring(0,8000) + '... [중략]';
+      }
+      cache.setCrawl(url, text);
+      return text;
+
+    } catch (err) {
+      // 쿨다운
+      proxy.cooldownUntil = Date.now() + PROXY_COOLDOWN_MS;
+      log(`[${proxy.name}] 크롤링 오류, 다음 프록시 시도:`, err);
+      return crawlWebpage(url, attempt+1);
+    }
+  }
+
+  async function crawlWebpages(list, step) {
+    if (!list.length) return [];
+    updateStatusUI(step, 'active', `분석중... (0/${list.length})`);
+    let doneCount = 0;
+    const promises = list.map(async info => {
+      try {
+        const c = await crawlWebpage(info.link);
+        doneCount++;
+        updateStatusUI(step, 'active', `${doneCount}/${list.length} 완료`);
+        return { ...info, content: c || '[내용 없음]', status: 'fulfilled' };
+      } catch (e) {
+        doneCount++;
+        updateStatusUI(step, 'active', `${doneCount}/${list.length} (오류)`);
+        return { ...info, content: `크롤링 오류: ${e}`, status: 'rejected' };
+      }
+    });
+    const res = await Promise.allSettled(promises);
+    updateStatusUI(step, 'active', '분석완료');
+    return res.map((r,i) => {
+      if (r.status === 'fulfilled') return r.value;
+      return { ...list[i], content: `크롤링 실패: ${r.reason}`, status: 'rejected' };
+    });
+  }
+
+  /* ======== GEMINI API ======== */
+  async function generateFollowUpQueries(originalQ, initialAnswer) {
+    if (!geminiApiKey) return [];
+    updateStatusUI(3, 'active', '추가 검색어 생성...');
+    const prompt = `사용자의 질문과 1차 답변을 참조해, 주제를 더 자세히 탐색하기 위한 한국어 검색어 3개를 제안해 주세요. 각 검색어는 5~10단어 내외로 작성. 목록만 주세요.
+
+원본 질문: ${originalQ}
+1차 답변 요약:
+${initialAnswer.substring(0,500)}
+
+검색어 목록:`;
+
+    const reqBody = {
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      safetySettings: [
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
+      ],
+      generationConfig: { temperature: 0.7 }
     };
 
-    /* ---- UI Helper ---- */
-    function escapeHtml(unsafe) {
-        if (unsafe === null || typeof unsafe === 'undefined') return '';
-        return unsafe
-            .toString()
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+    const model = "gemini-1.5-flash-latest";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
+    try {
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody)
+      });
+      const data = await resp.json();
+      if (!resp.ok || data.error) throw new Error(data.error ? data.error.message : `HTTP ${resp.status}`);
+      if (!data.candidates || !data.candidates[0].content) return [];
+      const text = data.candidates[0].content.parts[0].text;
+      const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+      return lines.slice(0,3);
+    } catch {
+      return [];
     }
-    function addUserMessage(message) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'user-message p-3 md:p-4 max-w-3xl ml-auto mb-4';
-        messageDiv.innerHTML = `<p>${escapeHtml(message)}</p>`;
-        chatMessages.appendChild(messageDiv);
-        // 자동 스크롤 중단(사용자가 직접 스크롤)
-        // scrollToBottom();
-    }
-    function addBotMessage(message, isHTML = false) {
-        removeStatusUI();
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'bot-message p-3 md:p-4 max-w-3xl mr-auto mb-4';
+  }
 
-        if (isHTML) {
-            const sanitizedHTML = message.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-            messageDiv.innerHTML = sanitizedHTML;
-        } else {
-            messageDiv.innerHTML = `<p>${escapeHtml(message)}</p>`;
+  async function getGeminiResponse(question, processed, isFinal=false, prevAnswer='') {
+    if (!geminiApiKey) {
+      return "Gemini API Key가 없어 답변 생성 불가";
+    }
+    const step = isFinal ? 5 : 3;
+    const statusText = isFinal ? '최종 생각중...' : '초기 생각중...';
+    updateStatusUI(step, 'active', statusText);
+
+    let context = '';
+    const validSources = [];
+    let sourceCount = 0;
+
+    function addItems(list) {
+      list.forEach(item => {
+        sourceCount++;
+        const fail = item.content?.startsWith('크롤링 실패')
+          || item.content?.startsWith('크롤링 건너뜀')
+          || item.content?.startsWith('지원하지 않는')
+          || item.content?.startsWith('[정보 없음]');
+        const snippetOnly = item.content?.startsWith('[스니펫 요약]');
+        if ((!fail || snippetOnly) && item.content) {
+          context += `[출처 ${sourceCount}: ${item.title}]\n${item.content}\n\n---\n\n`;
+          validSources.push({ ...item, sourceNum: sourceCount });
         }
-        chatMessages.appendChild(messageDiv);
-        // scrollToBottom();
-        return messageDiv;
-    }
-    /*
-    function scrollToBottom() {
-      setTimeout(() => {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }, 50);
-    }
-    */
-
-    /* ---- 처리 단계(Status) UI ---- */
-    const statusSteps = [
-        { id: 1, label: "1단계: 초기 정보 검색" },
-        { id: 2, label: "2단계: 초기 정보 분석" },
-        { id: 3, label: "3단계: 추가 탐색 준비" },
-        { id: 4, label: "4단계: 추가 정보 검색 및 분석" },
-        { id: 5, label: "5단계: 종합하여 생각 중" }
-    ];
-    function createStatusUI() {
-        removeStatusUI();
-
-        const container = document.createElement('div');
-        container.id = 'status-list-container';
-        container.className = 'mb-3';
-
-        const list = document.createElement('ul');
-        list.id = 'status-list';
-        list.className = 'space-y-1';
-
-        statusSteps.forEach(step => {
-            const item = document.createElement('li');
-            item.className = 'status-item status-pending';
-            item.dataset.step = step.id;
-            item.innerHTML = `
-                <span class="status-icon"><i class="far fa-circle"></i></span>
-                <span class="status-label">${escapeHtml(step.label)}</span>
-                <span class="status-detail ml-2"></span>
-            `;
-            list.appendChild(item);
-        });
-        container.appendChild(list);
-        chatMessages.appendChild(container);
-        // scrollToBottom();
-    }
-    function updateStatusUI(step, status, detailText = '') {
-        const container = document.getElementById('status-list-container');
-        if (!container) return;
-
-        const item = container.querySelector(`li[data-step="${step}"]`);
-        if (!item) return;
-
-        item.classList.remove('status-pending', 'status-active', 'status-completed');
-        item.classList.add(`status-${status}`);
-
-        const icon = item.querySelector('.status-icon i');
-        if (icon) {
-            if (status === 'active') {
-                icon.className = 'fas fa-spinner fa-spin';
-            } else if (status === 'completed') {
-                icon.className = 'fas fa-check-circle';
-            } else {
-                icon.className = 'far fa-circle';
-            }
-        }
-
-        const detail = item.querySelector('.status-detail');
-        if (detail) {
-            detail.textContent = detailText;
-            detail.style.display = (status === 'active' && detailText) ? 'inline' : 'none';
-        }
-
-        // 이전 단계를 자동 완료 처리
-        if (status === 'active' || status === 'completed') {
-            for (let i = 1; i < step; i++) {
-                const prevItem = container.querySelector(`li[data-step="${i}"]`);
-                if (prevItem && !prevItem.classList.contains('status-completed')) {
-                    prevItem.classList.remove('status-pending', 'status-active');
-                    prevItem.classList.add('status-completed');
-                    const prevIcon = prevItem.querySelector('.status-icon i');
-                    if (prevIcon) prevIcon.className = 'fas fa-check-circle';
-                    const prevDetail = prevItem.querySelector('.status-detail');
-                    if (prevDetail) prevDetail.style.display = 'none';
-                }
-            }
-        }
-        // scrollToBottom();
-    }
-    function removeStatusUI() {
-        const container = document.getElementById('status-list-container');
-        if (container) container.remove();
-    }
-    function setLoadingState(isLoading) {
-        if (isLoading) {
-            sendButton.disabled = true;
-            userInput.disabled = true;
-            createStatusUI();
-        } else {
-            sendButton.disabled = false;
-            userInput.disabled = false;
-        }
+      });
     }
 
-    /* ---- Web Crawling, Google Search ---- */
-    const PROXY_COOLDOWN_MS = 3 * 60 * 1000;
-    const proxies = [
-        {
-            name: 'corsproxy.io',
-            url: (targetUrl) => `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-            cooldownUntil: 0
-        },
-        {
-            name: 'allorigins',
-            url: (targetUrl) => `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
-            cooldownUntil: 0
-        },
-    ];
-    async function crawlWebpage(url, attempt = 0) {
-        const cachedContent = cache.getCrawl(url);
-        if (cachedContent) return cachedContent;
-
-        const availableProxies = proxies.filter(p => Date.now() >= (p.cooldownUntil || 0));
-        if (availableProxies.length === 0) {
-            const soonestAvailable = proxies.reduce((soonest, p) =>
-                ((p.cooldownUntil || 0) < (soonest.cooldownUntil || 0) ? p : soonest),
-                proxies[0]
-            );
-            const waitTime = soonestAvailable ? Math.ceil(((soonestAvailable.cooldownUntil || 0) - Date.now()) / 1000) : 'N/A';
-            return `크롤링 실패 (모든 프록시 쿨다운 중, 약 ${waitTime}초 후 재시도 가능): ${url}`;
-        }
-
-        const maxRetries = availableProxies.length;
-        if (attempt >= maxRetries) {
-            return `크롤링 실패 (최대 재시도): ${url}`;
-        }
-
-        const proxy = availableProxies[attempt];
-        try {
-            if (!url || !url.startsWith('http')) {
-                throw new Error(`유효하지 않은 URL: ${url}`);
-            }
-            const path = url.split('?')[0];
-            const fileExtension = path.includes('.') ? path.split('.').pop().toLowerCase() : '';
-            const nonHtmlExtensions = [
-                'pdf','doc','docx','ppt','pptx','xls','xlsx','zip','rar','jpg','jpeg','png','gif','webp','svg','mp3','mp4','avi','mov','exe','dmg'
-            ];
-            if (nonHtmlExtensions.includes(fileExtension)) {
-                return `크롤링 건너뜀 (파일 형식 ${fileExtension.toUpperCase()}): ${url}`;
-            }
-
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => {
-                controller.abort();
-            }, 15000);
-
-            const proxyUrl = proxy.url(url);
-            const headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-                'Upgrade-Insecure-Requests': '1',
-                'Sec-Fetch-Dest': 'document',
-                'Sec-Fetch-Mode': 'navigate',
-                'Sec-Fetch-Site': 'cross-site'
-            };
-
-            const response = await fetch(proxyUrl, {
-                signal: controller.signal,
-                headers: headers,
-                mode: 'cors',
-                referrerPolicy: 'strict-origin-when-cross-origin'
-            });
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                throw new Error(`HTTP 오류 ${response.status}`);
-            }
-
-            const contentType = response.headers.get('content-type') || '';
-            if (!contentType.includes('text/html') &&
-                !contentType.includes('application/xhtml+xml') &&
-                !contentType.includes('text/plain')
-            ) {
-                if (contentType.includes('application/json')) {
-                    try {
-                        const json = await response.json();
-                        const textContent = `JSON 데이터:\n${JSON.stringify(json, null, 2)}`.substring(0, 8000);
-                        cache.setCrawl(url, textContent);
-                        return textContent;
-                    } catch {
-                        return `JSON 파싱 오류. Content-Type: ${contentType}, URL: ${url}`;
-                    }
-                } else if (contentType.includes('xml') && !contentType.includes('xhtml')) {
-                    try {
-                        const xmlText = await response.text();
-                        const textContent = `XML 데이터:\n${xmlText}`.substring(0, 8000);
-                        cache.setCrawl(url, textContent);
-                        return textContent;
-                    } catch {
-                        return `XML 파싱 오류. Content-Type: ${contentType}, URL: ${url}`;
-                    }
-                }
-                return `지원하지 않는 콘텐츠 타입 (${contentType}): ${url}`;
-            }
-
-            const html = await response.text();
-            if (!html || html.trim().length === 0) {
-                throw new Error('빈 응답 또는 내용 없음');
-            }
-
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const title = doc.querySelector('title')?.textContent.trim() || url;
-            const metaDescription = doc.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() || '';
-
-            const elementsToRemove = [
-                'script','style','svg','img','picture','video','audio','iframe','nav','header','footer','aside','form',
-                'noscript','button','input','select','textarea','label','canvas','map','object','embed','.advertisement',
-                '.ad','#ad','.banner','.popup','.modal','.sidebar','.social-links','.share-buttons','.cookie-consent',
-                '[aria-hidden="true"]'
-            ];
-            elementsToRemove.forEach(sel => {
-                doc.querySelectorAll(sel).forEach(el => el.remove());
-            });
-
-            let mainContent = doc.querySelector('main')
-                || doc.querySelector('article')
-                || doc.querySelector('[role="main"]')
-                || doc.querySelector('.content, .main-content, .post-content, .entry-content, #content, #main, .article-body, .entry, .page-content');
-
-            if (!mainContent || mainContent.textContent.trim().length < 100) {
-                mainContent = doc.body;
-            }
-
-            function extractTextNodes(node) {
-                let nodeText = '';
-                if (!node) return '';
-                const significantTags = ['p','h1','h2','h3','h4','h5','h6','li','blockquote','pre','div','td'];
-
-                for (const child of node.childNodes) {
-                    if (child.nodeType === Node.TEXT_NODE) {
-                        nodeText += child.textContent;
-                    } else if (child.nodeType === Node.ELEMENT_NODE) {
-                        const tagName = child.tagName.toLowerCase();
-                        let displayStyle = 'inline';
-                        try {
-                            displayStyle = window.getComputedStyle(child).display;
-                        } catch {}
-                        if ((significantTags.includes(tagName) || displayStyle.includes('block') || displayStyle.includes('list-item'))
-                            && nodeText.length > 0 && !nodeText.endsWith('\n')) {
-                            nodeText += '\n';
-                        }
-                        nodeText += extractTextNodes(child);
-                        if ((significantTags.includes(tagName) || displayStyle.includes('block') || displayStyle.includes('list-item'))
-                            && !nodeText.endsWith('\n')) {
-                            nodeText += '\n';
-                        }
-                    }
-                }
-                return nodeText;
-            }
-            let text = extractTextNodes(mainContent);
-            text = text.replace(/(\s*\n\s*){3,}/g, '\n\n')
-                       .replace(/[ \t]{2,}/g, ' ')
-                       .replace(/^\s+|\s+$/gm, '')
-                       .trim();
-            text = `제목: ${title}\n${metaDescription ? '설명: ' + metaDescription + '\n' : ''}\n---\n\n${text}`;
-            if (text.length > 8000) {
-                text = text.substring(0, 8000) + '... [내용 중략됨]';
-            }
-
-            cache.setCrawl(url, text);
-            return text;
-
-        } catch (error) {
-            proxy.cooldownUntil = Date.now() + PROXY_COOLDOWN_MS;
-            return crawlWebpage(url, attempt + 1);
-        }
+    addItems(processed.initial || []);
+    if (isFinal && processed.followUp && processed.followUp.length) {
+      context += "\n===== 2차 검색 결과 =====\n";
+      addItems(processed.followUp);
     }
 
-    async function crawlWebpages(pagesToCrawl, currentStep) {
-        const totalSites = pagesToCrawl.length;
-        if (!totalSites) return [];
-
-        updateStatusUI(currentStep, 'active', `웹페이지 분석 시작 (0/${totalSites})...`);
-        let completed = 0;
-
-        const promises = pagesToCrawl.map(async info => {
-            try {
-                const content = await crawlWebpage(info.link);
-                completed++;
-                updateStatusUI(currentStep, 'active', `${completed}/${totalSites} 완료`);
-                return { ...info, content: content || '[내용 없음]', status: 'fulfilled' };
-            } catch (err) {
-                completed++;
-                updateStatusUI(currentStep, 'active', `${completed}/${totalSites} (오류)`);
-                return { ...info, content: `크롤링 오류: ${err.message}`, status: 'rejected' };
-            }
-        });
-
-        const results = await Promise.allSettled(promises);
-        updateStatusUI(currentStep, 'active', '분석 완료');
-        return results.map((r, i) => {
-            if (r.status === 'fulfilled') return r.value;
-            const origin = pagesToCrawl[i];
-            return { ...origin, content: `크롤링 실패: ${r.reason}`, status: 'rejected' };
-        });
+    if (!context) {
+      updateStatusUI(step, 'completed');
+      return "제공된 검색 결과가 충분치 않아 답변 불가합니다.";
     }
 
-    async function googleSearch(query, numResults = 8, attempt = 0) {
-        if (currentSearchConfigIndex >= googleSearchConfigs.length) {
-            throw new Error("Google 검색 API 오류: 모든 키/엔진 세트가 한도 초과되었습니다.");
-        }
-        const cached = cache.getSearch(query);
-        if (cached) return cached;
-
-        const { googleApiKey, searchEngineId } = googleSearchConfigs[currentSearchConfigIndex];
-        if (!googleApiKey || !searchEngineId) {
-            throw new Error(`Google Search API Key/Engine ID가 잘못됨 (인덱스: ${currentSearchConfigIndex})`);
-        }
-
-        try {
-            const apiUrl = `https://www.googleapis.com/customsearch/v1?key=${googleApiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query)}&num=${numResults}`;
-            const response = await fetch(apiUrl);
-            const data = await response.json();
-            if (!response.ok || data.error) {
-                const msg = data.error ? data.error.message : `HTTP ${response.status}`;
-                if (msg.includes("Quota exceeded") || msg.includes("limit") || response.status === 403) {
-                    currentSearchConfigIndex++;
-                    return googleSearch(query, numResults, attempt+1);
-                }
-                throw new Error(`Google 검색 API 오류: ${msg}`);
-            }
-            if (!data.items || !data.items.length) {
-                cache.setSearch(query, []);
-                return [];
-            }
-            const results = data.items.map(item => ({
-                title: item.title,
-                link: item.link,
-                snippet: item.snippet
-            }));
-            cache.setSearch(query, results);
-            return results;
-
-        } catch (error) {
-            if (error.message.includes("Quota exceeded") || error.message.includes("limit") || error.message.includes("403")) {
-                currentSearchConfigIndex++;
-                return googleSearch(query, numResults, attempt+1);
-            }
-            throw error;
-        }
-    }
-
-    /* ---- Gemini API ---- */
-    async function generateFollowUpQueries(originalQuestion, initialAnswer) {
-        if (!geminiApiKey) {
-            throw new Error("Gemini API Key가 없습니다.");
-        }
-        updateStatusUI(3, 'active', '추가 탐색 검색어 생성...');
-        const prompt = `사용자의 원본 질문과 제공된 초기 답변을 바탕으로, 주제를 더 깊이 탐색하거나 관련된 구체적인 정보를 찾기 위한 관련 검색어 3개를 제안해 주세요. 각 검색어는 5~10단어 내외로 구체적으로 작성하고, 한국어로 생성해야 합니다. 결과는 번호 매기기나 설명 없이 검색어 목록만 제공해 주세요.
-
-원본 질문: ${originalQuestion}
-
-초기 답변 요약 (참고용):
-${initialAnswer.substring(0, 500)}...
-
-제안 검색어 목록:`;
-
-        const requestPayload = {
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            safetySettings: [
-                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-            ],
-            generationConfig: { temperature: 0.7 }
-        };
-
-        const model = "gemini-1.5-flash-latest";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
-        try {
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestPayload)
-            });
-            const data = await response.json();
-            if (!response.ok || data.error) {
-                throw new Error(data.error ? data.error.message : `HTTP ${response.status}`);
-            }
-            if (!data.candidates || !data.candidates[0].content) {
-                updateStatusUI(3, 'active', '추가 검색어 생성 실패');
-                return [];
-            }
-            const text = data.candidates[0].content.parts[0].text;
-            const queries = text.split('\n').map(q => q.trim()).filter(Boolean);
-            return queries.slice(0,3);
-
-        } catch (err) {
-            updateStatusUI(3, 'active', '추가 검색어 오류');
-            return [];
-        }
-    }
-
-    async function getGeminiResponse(question, processedResults, isFinal = false, prevAnswer = '') {
-        if (!geminiApiKey) {
-            throw new Error("Gemini API Key가 없습니다.");
-        }
-        const step = isFinal ? 5 : 3;
-        const statusMsg = isFinal ? '종합하여 생각 중...' : '초기 분석으로 답변 중...';
-        updateStatusUI(step, 'active', statusMsg);
-
-        let context = '';
-        const validSources = [];
-        let sourceCounter = 0;
-        function pushResults(results) {
-            results.forEach(r => {
-                sourceCounter++;
-                const fail = (r.content?.startsWith('크롤링 실패') ||
-                              r.content?.startsWith('크롤링 건너뜀') ||
-                              r.content?.startsWith('지원하지 않는 콘텐츠 타입') ||
-                              r.content?.startsWith('[정보 없음]'));
-                const snippetOnly = r.content?.startsWith('[스니펫 요약]');
-                if ((!fail || snippetOnly) && r.content) {
-                    context += `[출처 ${sourceCounter}: ${r.title}]\n${r.content}\n\n---\n\n`;
-                    validSources.push({ ...r, sourceNum: sourceCounter });
-                }
-            });
-        }
-        pushResults(processedResults.initial || []);
-        if (isFinal && processedResults.followUp && processedResults.followUp.length) {
-            context += "\n===== 2차 검색 결과 =====\n";
-            pushResults(processedResults.followUp);
-        }
-
-        if (!context) {
-            updateStatusUI(step, 'completed', '유의미한 정보 없음');
-            return "웹에서 충분한 정보를 찾지 못했습니다.";
-        }
-
-        const systemInstruction = `
-당신은 제공된 웹 검색 결과(출처)를 바탕으로 사용자 질문에 답변하는 AI 챗봇입니다.
-- 각 출처는 '[출처 번호: 제목]' 형태로 제시됩니다.
-- 내용을 분석하여 사용자 질문에 대해 정확하고 상세하게, 한국어로 답변하세요.
-- 답변 내용 중 특정 출처를 참고했다면, 문장 끝에 '[출처 번호]'를 반드시 표기하세요.
-- 여러 출처를 종합한 경우 해당 출처 번호를 모두 표기하세요 (예: ... 입니다 [출처1][출처3]).
-- 출처 정보만으로 부족하면 "제공된 정보만으론 답변이 어렵습니다"라고 알려주세요.
-${isFinal ? "이것은 최종 답변입니다." : "이것은 초기 답변입니다."}
+    const systemPrompt = `당신은 제공된 웹 검색 결과(출처)로부터 사용자 질문에 답하는 AI입니다.
+- 각 출처는 "[출처 번호: 제목]" 형태
+- 질문에 맞게 분석하고 한국어로 답변
+- 특정 출처 내용을 사용한 부분은 문장 끝에 [출처 번호] 표시 (복수 출처면 여러 개)
+- 정보 부족하면 "제공된 정보만으론 답변이 어렵습니다." 식으로 안내
+${isFinal?"이것은 최종 답변입니다.":"이것은 초기 답변입니다."}
 `;
 
-        const requestPayload = {
-            contents: [{
-                role: "user",
-                parts: [{
-                    text: `System Instructions:\n${systemInstruction}\n\n---\n\n질문:\n${question}\n\n---\n\n검색 자료:\n${context}`
-                }]
-            }],
-            safetySettings: [
-                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-            ],
-            generationConfig: { temperature: isFinal ? 0.6 : 0.5 }
-        };
+    const reqBody = {
+      contents: [{
+        role: "user",
+        parts: [{
+          text: `System Instructions:\n${systemPrompt}\n\n사용자 질문:\n${question}\n\n검색 결과:\n${context}`
+        }]
+      }],
+      safetySettings: [
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
+      ],
+      generationConfig: { temperature: isFinal?0.6:0.5 }
+    };
+    const model = "gemini-2.0-flash";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
+    try {
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody)
+      });
+      const data = await resp.json();
+      if (!resp.ok || data.error) throw new Error(data.error ? data.error.message : `HTTP ${resp.status}`);
+      if (!data.candidates || !data.candidates[0].content) {
+        return "Gemini 응답이 비어있습니다.";
+      }
 
-        const model = "gemini-2.0-flash";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
-        try {
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestPayload)
-            });
-            const data = await response.json();
-            if (!response.ok || data.error) {
-                throw new Error(data.error ? data.error.message : `HTTP ${response.status}`);
-            }
-            if (!data.candidates || !data.candidates[0].content) {
-                updateStatusUI(step, 'active', 'Gemini 응답 없음');
-                return `Gemini 응답이 비어있습니다 (${isFinal?"최종":"초기"})`;
-            }
+      let answer = data.candidates[0].content.parts[0].text;
 
-            let answer = data.candidates[0].content.parts[0].text;
-            // 출처 링크 변환
-            validSources.forEach(src => {
-                const regex = new RegExp(`\\[출처\\s?${src.sourceNum}\\]`, "g");
-                const link = `<a href="${escapeHtml(src.link)}" target="_blank" class="source-link" title="${escapeHtml(src.title)}">[출처 ${src.sourceNum}]</a>`;
-                answer = answer.replace(regex, link);
-            });
+      // 출처 링크 변환
+      validSources.forEach(src => {
+        const re = new RegExp(`\\[출처\\s?${src.sourceNum}\\]`, 'g');
+        const linkHtml = `<a href="${escapeHtml(src.link)}" target="_blank" class="source-link" title="${escapeHtml(src.title)}">[출처 ${src.sourceNum}]</a>`;
+        answer = answer.replace(re, linkHtml);
+      });
 
-            // 간단한 마크다운 → HTML
-            answer = answer
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/`([^`]+)`/g, '<code>$1</code>')
-                .replace(/^###+\s+(.*)/gm, '<h4>$1</h4>')
-                .replace(/^##\s+(.*)/gm, '<h3>$1</h3>')
-                .replace(/^#\s+(.*)/gm, '<h2>$1</h2>')
-                .replace(/^\s*[\-\*]\s+(.*)/gm, '<li>$1</li>')
-                .replace(/(<li>.*<\/li>\s*)+/g, '<ul>$&</ul>')
-                .replace(/\n/g, '<br>')
-                .replace(/<\/ul><br>/g, '</ul>')
-                .replace(/<br><ul>/g, '<ul>')
-                .replace(/<li><br>/g, '<li>')
-                .replace(/<br><\/li>/g, '</li>');
+      // 마크다운 -> HTML
+      answer = answer
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/^###+\s+(.*)/gm, '<h5>$1</h5>')
+        .replace(/^##\s+(.*)/gm, '<h4>$1</h4>')
+        .replace(/^#\s+(.*)/gm, '<h3>$1</h3>')
+        .replace(/^\s*[\-\*]\s+(.*)/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>\s*)+/g, '<ul>$&</ul>')
+        .replace(/\n/g, '<br>')
+        .replace(/<\/ul><br>/g, '</ul>')
+        .replace(/<br><ul>/g, '<ul>')
+        .replace(/<li><br>/g, '<li>')
+        .replace(/<br><\/li>/g, '</li>');
 
-            updateStatusUI(step, 'active', '생각 완료');
-            return { answer, sources: validSources };
+      updateStatusUI(step, 'active', '생각완료');
+      return { answer, sources: validSources };
 
-        } catch (error) {
-            updateStatusUI(step, 'active', 'Gemini 오류');
-            return `Gemini 응답 오류: ${error.message}`;
-        }
+    } catch (err) {
+      updateStatusUI(step, 'active', 'Gemini 오류');
+      return `Gemini 오류: ${err.message}`;
     }
+  }
 
-    /* ---- Main Process ---- */
-    async function processMessage(message) {
-        addUserMessage(message);
-        setLoadingState(true);
+  /* ======== MAIN MSG PROCESSING ======== */
+  async function processMessage(msg) {
+    addUserMessage(msg);
+    setLoadingState(true);
 
-        let initialSearchResults = [];
-        let initialProcessed = [];
-        let followUpSearchResults = [];
-        let followUpProcessed = [];
-        let allResults = [];
+    let step1Results = [];
+    let step1Processed = [];
+    let followUpSearchResults = [];
+    let followUpProcessed = [];
+    let allResults = [];
 
-        try {
-            // 단계 1
-            updateStatusUI(1, 'active', 'Google 검색 중...');
-            initialSearchResults = await googleSearch(message, 8);
-            allResults = [...initialSearchResults];
-            if (!initialSearchResults.length) {
-                updateStatusUI(1, 'completed', '결과 없음');
-                addBotMessage('관련 정보를 찾지 못했습니다. 다른 질문을 시도해 보세요.');
-                return;
-            }
-            updateStatusUI(1, 'completed', `${initialSearchResults.length}개 검색 결과`);
+    try {
+      // 1단계: 검색
+      updateStatusUI(1, 'active', 'Google 검색 중...');
+      step1Results = await googleSearch(msg, 8);
+      allResults = [...step1Results];
+      if (!step1Results.length) {
+        updateStatusUI(1, 'completed', '결과 없음');
+        addBotMessage('관련 검색 결과를 찾지 못했습니다.');
+        return;
+      }
+      updateStatusUI(1, 'completed', `${step1Results.length}개 결과`);
 
-            // 단계 2
-            const toCrawl = initialSearchResults.map(r => ({
-                link: r.link, title: r.title, snippet: r.snippet
-            }));
-            initialProcessed = await crawlWebpages(toCrawl, 2);
-            updateStatusUI(2, 'completed', '초기 분석 완료');
+      // 2단계: 초기 크롤링
+      const toCrawl = step1Results.map(r => ({ link: r.link, title: r.title, snippet: r.snippet }));
+      step1Processed = await crawlWebpages(toCrawl, 2);
+      updateStatusUI(2, 'completed', '분석 완료');
 
-            // 스니펫 대체
-            initialProcessed = initialProcessed.map(res => {
-                const fail = res.status === 'rejected'
-                          || res.content.startsWith('크롤링 실패')
-                          || res.content.startsWith('크롤링 건너뜀')
-                          || res.content.startsWith('지원하지 않는 콘텐츠');
-                const snip = !!(res.snippet && res.snippet.trim());
-                if (fail && snip) {
-                    return { ...res, content: `[스니펫 요약] ${res.snippet}`, status: 'fulfilled_with_snippet' };
-                } else if (fail) {
-                    return { ...res, content: `[정보 없음] ${res.content || '크롤링 실패'}`, status: 'rejected_no_snippet' };
-                }
-                return { ...res };
-            });
-
-            // 단계 3: 초기 답변
-            const initialData = { initial: initialProcessed };
-            const initialAnswer = await getGeminiResponse(message, initialData, false);
-            if (typeof initialAnswer === 'string' || !initialAnswer?.answer) {
-                updateStatusUI(3, 'completed', '초기 답변 실패');
-                addBotMessage(typeof initialAnswer === 'string' ? initialAnswer : "초기 답변 생성 실패");
-                return;
-            }
-            const initialAnswerText = initialAnswer.answer;
-            updateStatusUI(3, 'completed', '초기 답변 완료');
-
-            // 추가 검색어
-            const followQueries = await generateFollowUpQueries(message, initialAnswerText);
-            updateStatusUI(3, 'completed', followQueries.length ? '추가 검색어 생성됨' : '추가 검색어 없음');
-
-            // 단계 4: 추가 검색/분석
-            if (!followQueries.length) {
-                updateStatusUI(4, 'completed', '추가 검색 없음');
-            } else {
-                updateStatusUI(4, 'active', '추가 검색 진행...');
-                const nested = await Promise.all(followQueries.map(q => googleSearch(q, 3)));
-                followUpSearchResults = nested.flat();
-                allResults.push(...followUpSearchResults);
-
-                if (followUpSearchResults.length) {
-                    const toCrawl2 = followUpSearchResults.map(r => ({
-                        link: r.link, title: r.title, snippet: r.snippet
-                    }));
-                    followUpProcessed = await crawlWebpages(toCrawl2, 4);
-                    followUpProcessed = followUpProcessed.map(res => {
-                        const fail = res.content.startsWith('크롤링 실패')
-                                  || res.content.startsWith('크롤링 건너뜀')
-                                  || res.content.startsWith('지원하지 않는 콘텐츠');
-                        const snip = !!(res.snippet && res.snippet.trim());
-                        if (fail && snip) {
-                            return { ...res, content: `[스니펫 요약] ${res.snippet}`, status: 'fulfilled_with_snippet' };
-                        } else if (fail) {
-                            return { ...res, content: `[정보 없음] ${res.content}`, status: 'rejected_no_snippet' };
-                        }
-                        return { ...res };
-                    });
-                    updateStatusUI(4, 'completed', '추가 분석 완료');
-                } else {
-                    updateStatusUI(4, 'completed', '추가 검색 결과 없음');
-                }
-            }
-
-            // 단계 5: 최종 답변
-            const finalData = { initial: initialProcessed, followUp: followUpProcessed };
-            const finalAnswer = await getGeminiResponse(message, finalData, true, initialAnswerText);
-            if (typeof finalAnswer === 'string' || !finalAnswer?.answer) {
-                updateStatusUI(5, 'completed', '최종 답변 실패');
-                addBotMessage(typeof finalAnswer === 'string' ? finalAnswer : "최종 답변 생성 실패");
-                return;
-            }
-            updateStatusUI(5, 'completed', '완료!');
-
-            const finalHtml = finalAnswer.answer;
-            const botMsg = addBotMessage(finalHtml, true);
-
-            // 참고한 원본 검색결과 표시
-            if (botMsg && allResults.length) {
-                const srcDiv = document.createElement('div');
-                srcDiv.className = 'mt-4 pt-4 border-t border-gray-700 text-sm no-print';
-                let srcHtml = `<p class="mb-2">참고한 원본 검색결과 목록 (1차+2차)</p><ul class="list-disc list-inside space-y-1">`;
-                const linkSet = new Set();
-                allResults.forEach(r => {
-                    if (r && r.link && !linkSet.has(r.link)) {
-                        linkSet.add(r.link);
-                        srcHtml += `<li><a href="${escapeHtml(r.link)}" target="_blank" class="source-link" title="${escapeHtml(r.snippet||'')}">${escapeHtml(r.title)}</a></li>`;
-                    }
-                });
-                srcHtml += '</ul>';
-                srcDiv.innerHTML = srcHtml;
-                botMsg.appendChild(srcDiv);
-                // scrollToBottom();
-            }
-
-        } catch (err) {
-            const active = document.querySelector('.status-item.status-active');
-            if (active) updateStatusUI(active.dataset.step, 'completed', '에러 발생');
-            addBotMessage(`처리 중 오류가 발생했습니다: ${err.message}`);
-        } finally {
-            setLoadingState(false);
+      // 크롤링 실패 시 스니펫 대체
+      step1Processed = step1Processed.map(item => {
+        const fail = item.content.startsWith('크롤링 실패')
+          || item.content.startsWith('크롤링 건너뜀')
+          || item.content.startsWith('지원하지 않는');
+        if (fail && item.snippet) {
+          return { ...item, content: `[스니펫 요약] ${item.snippet}`, status: 'snippet' };
+        } else if (fail) {
+          return { ...item, content: `[정보 없음] ${item.content}`, status: 'rejected_no_snippet' };
         }
+        return { ...item };
+      });
+
+      // 3단계: 1차 Gemini 답변
+      const geminiDataInitial = { initial: step1Processed };
+      const res1 = await getGeminiResponse(msg, geminiDataInitial, false);
+      if (typeof res1 === 'string' || !res1?.answer) {
+        updateStatusUI(3, 'completed', '오류');
+        addBotMessage(typeof res1==='string'?res1:'초기 답변 실패');
+        return;
+      }
+      updateStatusUI(3, 'completed', '초기 답변 완료');
+      const firstAnswer = res1.answer;
+
+      // 추가 검색어
+      const followQueries = await generateFollowUpQueries(msg, firstAnswer);
+      updateStatusUI(3, 'completed', followQueries.length? '추가 검색어 생성됨' : '추가 검색어 없음');
+
+      // 4단계: 추가 검색/크롤
+      if (followQueries.length) {
+        updateStatusUI(4, 'active', '추가 검색 중...');
+        const nested = await Promise.all(followQueries.map(q => googleSearch(q, 3)));
+        followUpSearchResults = nested.flat();
+        if (followUpSearchResults.length) {
+          allResults.push(...followUpSearchResults);
+
+          const toCrawl2 = followUpSearchResults.map(r => ({
+            link: r.link, title: r.title, snippet: r.snippet
+          }));
+          followUpProcessed = await crawlWebpages(toCrawl2, 4);
+          followUpProcessed = followUpProcessed.map(item => {
+            const fail = item.content.startsWith('크롤링 실패')
+              || item.content.startsWith('크롤링 건너뜀')
+              || item.content.startsWith('지원하지 않는');
+            if (fail && item.snippet) {
+              return { ...item, content: `[스니펫 요약] ${item.snippet}`, status: 'snippet' };
+            } else if (fail) {
+              return { ...item, content: `[정보 없음] ${item.content}`, status: 'rejected_no_snippet' };
+            }
+            return { ...item };
+          });
+          updateStatusUI(4, 'completed', '추가 분석 완료');
+        } else {
+          updateStatusUI(4, 'completed', '추가 검색 결과 없음');
+        }
+      } else {
+        updateStatusUI(4, 'completed', '추가 검색 안함');
+      }
+
+      // 5단계: 최종 Gemini
+      const geminiDataFinal = { initial: step1Processed, followUp: followUpProcessed };
+      const res2 = await getGeminiResponse(msg, geminiDataFinal, true, firstAnswer);
+      if (typeof res2 === 'string' || !res2?.answer) {
+        updateStatusUI(5, 'completed', '오류');
+        addBotMessage(typeof res2==='string'?res2:'최종 답변 실패');
+        return;
+      }
+      updateStatusUI(5, 'completed', '완료!');
+      const finalHtml = res2.answer;
+      const botDiv = addBotMessage(finalHtml);
+
+      // 추가: 참고 검색 결과 목록
+      if (allResults.length && botDiv) {
+        const srcDiv = document.createElement('div');
+        srcDiv.style.marginTop = '12px';
+        srcDiv.style.borderTop = '1px solid #00ff00';
+        srcDiv.style.paddingTop = '8px';
+        let html = '<p style="margin-bottom:4px;">참고한 원본 검색결과 (1차+2차):</p><ul>';
+        const unique = new Set();
+        allResults.forEach(r => {
+          if (r && r.link && !unique.has(r.link)) {
+            unique.add(r.link);
+            const safeTitle = escapeHtml(r.title||'');
+            const safeLink = escapeHtml(r.link||'#');
+            const safeSnip = escapeHtml(r.snippet||'');
+            html += `<li><a href="${safeLink}" target="_blank" class="source-link" title="${safeSnip}">${safeTitle}</a></li>`;
+          }
+        });
+        html += '</ul>';
+        srcDiv.innerHTML = html;
+        botDiv.appendChild(srcDiv);
+      }
+
+    } catch (err) {
+      log('오류:', err);
+      const active = document.querySelector('.status-item.status-active');
+      if (active) {
+        active.classList.remove('status-active');
+        active.classList.add('status-completed');
+      }
+      addBotMessage(`처리 중 오류 발생: ${err.message}`);
+    } finally {
+      setLoadingState(false);
     }
+  }
 
-    /* ---- Event Listeners ---- */
-    sendButton.addEventListener('click', () => {
-        const msg = userInput.value.trim();
-        if (msg && !sendButton.disabled) {
-            userInput.value = '';
-            userInput.focus();
-            processMessage(msg);
-        }
-    });
-    userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) {
-            e.preventDefault();
-            sendButton.click();
-        }
-    });
+  /* ======== EVENT LISTENERS ======== */
+  sendButton.addEventListener('click', () => {
+    const msg = userInput.value.trim();
+    if (msg) {
+      processMessage(msg);
+      userInput.value = '';
+    }
+  });
+  userInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) {
+      e.preventDefault();
+      sendButton.click();
+    }
+  });
 
-    // 초기
-    userInput.focus();
-    log("챗봇 초기화 완료");
+  // 초기화
+  userInput.focus();
+  log('챗봇 초기화 완료');
 </script>
 </body>
 </html>
