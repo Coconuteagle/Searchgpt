@@ -185,7 +185,7 @@
   <!-- 입력창 영역 -->
   <div class="chat-input-container no-print">
     <input type="text" id="user-input" class="chat-input" placeholder="what's the problem?">
-    <button id="send-button" class="chat-send-button">전송</button>
+    <button id="send-button" class="chat-send-button">send</button>
   </div>
 
   <!-- 하단 안내 -->
@@ -668,11 +668,11 @@ ${initialAnswer.substring(0,500)}
       return "제공된 검색 결과가 충분치 않아 답변 불가합니다.";
     }
 
-    const systemPrompt = `당신은 제공된 웹 검색 결과(출처)로부터 사용자 질문에 답하는 AI입니다.
+    const systemPrompt = `당신은 제공된 웹 검색 결과(출처)로부터 사용자 질문에 답하는 AI 모피어스입니다.
 - 각 출처는 "[출처 번호: 제목]" 형태
-- 질문에 맞게 분석하고 한국어로 답변
+- 질문에 맞게 분석하고 한국어 반말로 답변 마치 모피어스처럼. 비밀을 얘기하는 것처럼.
 - 특정 출처 내용을 사용한 부분은 문장 끝에 [출처 번호] 표시 (복수 출처면 여러 개)
-- 정보 부족하면 "제공된 정보만으론 답변이 어렵습니다." 식으로 안내
+- 정보 부족하면 "제공된 정보만으론 답변이 어렵다." 식으로 안내
 ${isFinal?"이것은 최종 답변입니다.":"이것은 초기 답변입니다."}
 `;
 
