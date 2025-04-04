@@ -37,7 +37,7 @@
       overflow-y: auto;
       padding: 8px;
       display: flex;
-      flex-direction: column; /* 새 메시지를 맨 위에 붙이려면 '컬럼 역순' or 삽입 위치를 조정 */
+      flex-direction: column; /* 메시지를 위->아래 순서로 표시 (정방향) */
     }
 
     /* 스크롤바 디자인 (WebKit 전용) */
@@ -276,22 +276,18 @@
       .replace(/'/g, "&#039;");
   }
 
-  // 사용자 메시지를 "맨 위"에 추가하고, 스크롤을 상단으로 이동
+  // 사용자 메시지를 "아래쪽"에 추가하고, 스크롤을 맨 아래로 이동
   function addUserMessage(text) {
     const div = document.createElement('div');
     div.className = 'user-message';
     div.textContent = text;
-    // 가장 위에 삽입
-    if (chatBox.firstChild) {
-      chatBox.insertBefore(div, chatBox.firstChild);
-    } else {
-      chatBox.appendChild(div);
-    }
-    // 상단으로 스크롤
-    chatBox.scrollTop = 0;
+    // 뒤에 붙임
+    chatBox.appendChild(div);
+    // 자동 스크롤을 맨 아래로
+    chatBox.scrollTop = chatBox.scrollHeight;
   }
 
-  // 봇 메시지를 "맨 위"에 추가하고, 스크롤을 상단으로 이동
+  // 봇 메시지를 "아래쪽"에 추가하고, 스크롤을 맨 아래로 이동
   function addBotMessage(html) {
     removeStatusUI(); // 새 봇메시지 시점에 기존 상태창 제거 (디자인상)
 
@@ -300,14 +296,10 @@
     const sanitized = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
     div.innerHTML = sanitized;
 
-    // 가장 위에 삽입
-    if (chatBox.firstChild) {
-      chatBox.insertBefore(div, chatBox.firstChild);
-    } else {
-      chatBox.appendChild(div);
-    }
-    // 상단으로 스크롤
-    chatBox.scrollTop = 0;
+    // 뒤에 붙임
+    chatBox.appendChild(div);
+    // 자동 스크롤
+    chatBox.scrollTop = chatBox.scrollHeight;
 
     return div;
   }
@@ -318,7 +310,7 @@
     const container = document.createElement('div');
     container.id = 'status-list-container';
 
-    // 예시: 5단계까지 있으면 필요에 맞게 수정
+    // 단계 5개 예시
     const listHtml = `
       <ul id="status-list">
         <li class="status-item status-pending" data-step="1">
@@ -344,12 +336,9 @@
       </ul>`;
     container.innerHTML = listHtml;
 
-    // 상태 UI도 맨 위로
-    if (chatBox.firstChild) {
-      chatBox.insertBefore(container, chatBox.firstChild);
-    } else {
-      chatBox.appendChild(container);
-    }
+    // 상태 UI도 "아래쪽"에 추가
+    chatBox.appendChild(container);
+    chatBox.scrollTop = chatBox.scrollHeight;
   }
 
   function updateStatusUI(step, status, detail = '') {
@@ -383,6 +372,11 @@
         }
       }
     }
+
+    // detail 표시 필요하면 해도 됨 (예: 아이템 안에 <span class="detail">detail</span>)
+    // 여기서는 생략
+    // 매번 갱신 후 스크롤
+    chatBox.scrollTop = chatBox.scrollHeight;
   }
 
   function removeStatusUI() {
@@ -396,8 +390,8 @@
       userInput.disabled = true;
       sendButton.disabled = true;
       createStatusUI();
-      // 상태 UI를 맨 위로 배치했으니 스크롤도 올려놓음
-      chatBox.scrollTop = 0;
+      // 스크롤도 맨 아래로
+      chatBox.scrollTop = chatBox.scrollHeight;
     } else {
       userInput.disabled = false;
       sendButton.disabled = false;
@@ -819,6 +813,7 @@ ${isFinal?"이것은 최종 답변입니다.":"이것은 초기 답변입니다.
       }
       updateStatusUI(3, 'completed', '초기 답변 완료');
       const firstAnswer = res1.answer;
+      addBotMessage(firstAnswer);
 
       // 추가 검색어
       const followQueries = await generateFollowUpQueries(msg, firstAnswer);
@@ -887,6 +882,7 @@ ${isFinal?"이것은 최종 답변입니다.":"이것은 초기 답변입니다.
         html += '</ul>';
         srcDiv.innerHTML = html;
         botDiv.appendChild(srcDiv);
+        chatBox.scrollTop = chatBox.scrollHeight; // 추가 목록도 표시 후 스크롤
       }
 
     } catch (err) {
@@ -920,6 +916,26 @@ ${isFinal?"이것은 최종 답변입니다.":"이것은 초기 답변입니다.
   // 초기화
   userInput.focus();
   log('챗봇 초기화 완료');
+  sendButton.addEventListener('click', () => {
+    const msg = userInput.value.trim();
+    if (msg) {
+      // 1) 전송 직전에 input 요소 blur -> 가상키보드 내림
+      userInput.blur();
+
+      processMessage(msg);
+      userInput.value = '';
+    }
+  });
+
+  userInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) {
+      e.preventDefault();
+      // 2) Enter 입력 시에도 blur
+      userInput.blur();
+
+      sendButton.click();
+    }
+  });
 </script>
 </body>
 </html>
