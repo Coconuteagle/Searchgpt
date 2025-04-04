@@ -14,12 +14,12 @@ window.apiKeys = {
       searchEngineId: "c740225da5cb9464d"
     },
     {
-      googleApiKey: "",
-      searchEngineId: ""
+      googleApiKey: "AIzaSyD2MdhssL0ld1jcOk5CIA9UdAEyVUlL0Is",
+      searchEngineId: "c490e860d8a5a414a"
     },
     {
-      googleApiKey: "",
-      searchEngineId: ""
+      googleApiKey: "AIzaSyAhVhb4mNKre2kS-XAxtU7M-yAwCWN-Wkw",
+      searchEngineId: "46b83232b96ef4fa4"
     },
     // ...
   ],
