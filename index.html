@@ -116,6 +116,48 @@
             .print-break { page-break-before: always; }
              #chat-form, #progress-section, #theme-toggle { display: none; } /* Hide form/controls */
         }
+        /* Status List Styles */
+#status-list-container {
+    /* margin-bottom: 1rem; /* 필요에 따라 여백 조정 */
+}
+.status-item {
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    padding: 0.25rem 0; /* 상하 패딩 약간 추가 */
+}
+.status-icon {
+    width: 20px; /* 아이콘 너비 고정 */
+    text-align: center;
+    margin-right: 0.5rem;
+    transition: color 0.3s ease;
+}
+.status-label {
+    transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+.status-detail {
+    margin-left: 0.5rem;
+    font-size: 0.8rem; /* 상세 텍스트 크기 약간 줄임 */
+}
+
+/* Status States */
+.status-item.status-pending .status-icon { color: #a0aec0; /* Gray */ }
+.status-item.status-pending .status-label { color: #a0aec0; }
+.status-item.status-pending .status-detail { display: none; } /* 대기 중에는 상세정보 숨김 */
+
+.status-item.status-active .status-icon { color: #4299e1; /* Blue */ animation: spin 1s linear infinite; } /* 진행 중 아이콘 */
+.status-item.status-active .status-label { font-weight: 600; color: inherit; } /* 현재 텍스트 색상, 약간 굵게 */
+.status-item.status-active .status-detail { display: inline; } /* 진행 중에는 상세정보 표시 */
+
+.status-item.status-completed .status-icon { color: #48bb78; /* Green */ animation: none; } /* 완료 아이콘 */
+.status-item.status-completed .status-label { color: #718096; text-decoration: line-through; } /* 완료 시 회색 및 취소선 */
+.status-item.status-completed .status-detail { display: none; } /* 완료 시 상세정보 숨김 */
+
+/* Simple spin animation for active icon */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -180,11 +222,10 @@
         const chatMessages = document.getElementById('chat-messages');
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
-        const progressSection = document.getElementById('progress-section');
-        const progressBar = document.getElementById('progress-bar');
-        const progressStatus = document.getElementById('progress-status');
+        // REMOVED: progressSection, progressBar, progressStatus
         const themeToggleBtn = document.getElementById('theme-toggle');
         const body = document.body;
+        const chatForm = document.getElementById('chat-form'); // Get chat form for status UI insertion
 
         // --- Dark Mode ---
         // (다크 모드 관련 코드는 변경 없음 - 생략)
@@ -250,7 +291,7 @@
 
 
         // --- UI Update Functions ---
-        // (UI 업데이트 함수들은 변경 없음 - escapeHtml, addUserMessage, addBotMessage, addLoadingMessage, updateLoadingMessage, removeLoadingMessage, updateProgress, scrollToBottom, setLoadingState - 생략)
+        // (escapeHtml, addUserMessage, addBotMessage, scrollToBottom - 변경 없음, 생략)
         function escapeHtml(unsafe) {
             if (unsafe === null || typeof unsafe === 'undefined') return '';
              return unsafe
@@ -271,6 +312,9 @@
         }
 
         function addBotMessage(message, isHTML = false) {
+            // Ensure status UI is removed before adding the final bot message
+            removeStatusUI();
+
             const messageDiv = document.createElement('div');
             messageDiv.className = 'bot-message p-3 md:p-4 text-gray-800 dark:text-gray-200 max-w-3xl mr-auto mb-4';
             if (isHTML) {
@@ -284,87 +328,125 @@
             return messageDiv;
         }
 
-         function addLoadingMessage() {
-            const existingLoading = document.getElementById('loading-message');
-            if (existingLoading) return existingLoading; // Don't add multiple loading messages
-
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'bot-message p-4 text-gray-800 dark:text-gray-200 max-w-3xl mr-auto mb-4';
-            messageDiv.id = 'loading-message';
-            messageDiv.innerHTML = `<span>작업 중</span><span class="ellipsis"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></span>`; // Initial state
-            chatMessages.appendChild(messageDiv);
-            scrollToBottom();
-            return messageDiv;
-        }
-
-         function updateLoadingMessage(message) {
-            let loadingMessage = document.getElementById('loading-message');
-            if (!loadingMessage) {
-                 loadingMessage = addLoadingMessage(); // Ensure it exists
-            }
-            // Update the text part of the loading message
-            const textSpan = loadingMessage.querySelector('span:first-child');
-            if(textSpan) {
-                textSpan.textContent = escapeHtml(message);
-            }
-         }
-
-
-        function removeLoadingMessage() {
-            const loadingMessage = document.getElementById('loading-message');
-            if (loadingMessage) {
-                loadingMessage.remove();
-            }
-        }
-
-        function updateProgress(percent, statusText) {
-             progressBar.style.width = `${Math.min(100, Math.max(0, percent))}%`;
-             progressStatus.textContent = statusText;
-
-             // Make progress bar visible if needed
-             if (percent > 0 && progressSection.classList.contains('hidden')) {
-                 progressSection.classList.remove('hidden');
-             }
-
-             // Automatically hide progress bar when complete after a delay
-             if (percent >= 100) {
-                 setTimeout(() => {
-                     // Check again in case a new process started quickly
-                     if (progressBar.style.width === '100%') {
-                          progressSection.classList.add('hidden');
-                          progressBar.style.width = '0%';
-                          progressStatus.textContent = '';
-                     }
-                 }, 1500); // Hide after 1.5 seconds
-             } else if (percent <= 0) { // Hide immediately if reset to 0
-                  progressSection.classList.add('hidden');
-                  progressBar.style.width = '0%';
-                  progressStatus.textContent = '';
-             }
-        }
-
-
         function scrollToBottom() {
              setTimeout(() => {
                  chatMessages.scrollTop = chatMessages.scrollHeight;
              }, 50); // Short delay allows DOM to update
         }
 
+        // --- NEW Status UI Functions ---
+        const statusSteps = [
+            { id: 1, label: "1단계: 초기 정보 검색" },
+            { id: 2, label: "2단계: 초기 정보 분석" },
+            { id: 3, label: "3단계: 추가 탐색 준비" },
+            { id: 4, label: "4단계: 추가 정보 검색 및 분석" },
+            { id: 5, label: "5단계: 종합하여 생각 중" }
+        ];
+
+        function createStatusUI() {
+            removeStatusUI(); // Remove any existing status UI first
+
+            const container = document.createElement('div');
+            container.id = 'status-list-container';
+            container.className = 'mb-3'; // Add some bottom margin
+
+            const list = document.createElement('ul');
+            list.id = 'status-list';
+            list.className = 'space-y-1 text-sm';
+
+            statusSteps.forEach(step => {
+                const item = document.createElement('li');
+                item.className = 'status-item status-pending';
+                item.dataset.step = step.id;
+                item.innerHTML = `
+                    <span class="status-icon"><i class="far fa-circle"></i></span>
+                    <span class="status-label">${escapeHtml(step.label)}</span>
+                    <span class="status-detail text-gray-500 dark:text-gray-400 ml-2"></span>
+                `;
+                list.appendChild(item);
+            });
+
+            container.appendChild(list);
+            // Insert the status container at the beginning of the chat form's inner div
+            const formInnerDiv = chatForm.querySelector('.max-w-3xl');
+            if (formInnerDiv) {
+                 formInnerDiv.insertBefore(container, formInnerDiv.firstChild);
+            } else {
+                chatForm.appendChild(container); // Fallback
+            }
+        }
+
+        function updateStatusUI(step, status, detailText = '') {
+            const container = document.getElementById('status-list-container');
+            if (!container) return;
+
+            const item = container.querySelector(`li[data-step="${step}"]`);
+            if (!item) return;
+
+            // Update status class
+            item.classList.remove('status-pending', 'status-active', 'status-completed');
+            item.classList.add(`status-${status}`);
+
+            // Update icon
+            const icon = item.querySelector('.status-icon i');
+            if (icon) {
+                if (status === 'active') {
+                    icon.className = 'fas fa-spinner fa-spin'; // Font Awesome spinner
+                } else if (status === 'completed') {
+                    icon.className = 'fas fa-check-circle'; // Font Awesome check
+                } else { // pending
+                    icon.className = 'far fa-circle'; // Font Awesome empty circle
+                }
+            }
+
+            // Update detail text
+            const detail = item.querySelector('.status-detail');
+            if (detail) {
+                detail.textContent = detailText;
+                detail.style.display = (status === 'active' && detailText) ? 'inline' : 'none';
+            }
+
+            // Mark previous steps as completed if the current one is active or completed
+            if (status === 'active' || status === 'completed') {
+                for (let i = 1; i < step; i++) {
+                    const prevItem = container.querySelector(`li[data-step="${i}"]`);
+                    if (prevItem && !prevItem.classList.contains('status-completed')) {
+                        prevItem.classList.remove('status-pending', 'status-active');
+                        prevItem.classList.add('status-completed');
+                        const prevIcon = prevItem.querySelector('.status-icon i');
+                        if (prevIcon) prevIcon.className = 'fas fa-check-circle';
+                        const prevDetail = prevItem.querySelector('.status-detail');
+                        if (prevDetail) prevDetail.style.display = 'none';
+                    }
+                }
+            }
+             // Scroll status into view if needed (optional)
+             // item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+
+        function removeStatusUI() {
+            const container = document.getElementById('status-list-container');
+            if (container) {
+                container.remove();
+            }
+        }
+
+        // Modified setLoadingState
         function setLoadingState(isLoading) {
-             if (isLoading) {
-                 sendButton.disabled = true;
-                 userInput.disabled = true;
-                 sendButton.classList.add('disabled:opacity-50');
-                 addLoadingMessage(); // Add the loading message element
-                 updateProgress(0, '시작 중...'); // Reset progress
-             } else {
-                 sendButton.disabled = false;
-                 userInput.disabled = false;
-                 sendButton.classList.remove('disabled:opacity-50');
-                 removeLoadingMessage(); // Remove the loading message element
-                 // Don't reset progress here, let updateProgress(100, ...) handle hiding
-             }
-         }
+            if (isLoading) {
+                sendButton.disabled = true;
+                userInput.disabled = true;
+                sendButton.classList.add('disabled:opacity-50');
+                createStatusUI(); // Create and show the status UI
+            } else {
+                sendButton.disabled = false;
+                userInput.disabled = false;
+                sendButton.classList.remove('disabled:opacity-50');
+                // Keep status UI until bot message is added, then remove it via addBotMessage's call to removeStatusUI()
+                // removeStatusUI(); // Don't remove immediately, remove before adding final bot message
+            }
+        }
 
 
         // --- Google Search API Call ---
@@ -375,8 +457,6 @@
             if (!googleApiKey || !searchEngineId) {
                  throw new Error("Google Search API Key or Search Engine ID is missing in config.js");
             }
-
-            // Progress update is handled by the caller (processMessage)
 
             const cachedResults = cache.getSearch(query);
             if (cachedResults) {
@@ -415,7 +495,7 @@
 
 
         // --- Web Crawling ---
-        // (crawlWebpage 및 crawlWebpages 함수는 변경 없음 - 생략)
+        // (crawlWebpage 및 crawlWebpages 함수는 변경 없음 - crawlWebpages는 진행 상태 콜백 대신 직접 UI 업데이트)
         const PROXY_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes cooldown period
         const proxies = [
              { name: 'corsproxy.io', url: (targetUrl) => `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, cooldownUntil: 0 },
@@ -425,7 +505,6 @@
         async function crawlWebpage(url, attempt = 0) {
             const cachedContent = cache.getCrawl(url);
             if (cachedContent) {
-                // Return cached data immediately if valid
                 return cachedContent;
             }
 
@@ -464,31 +543,30 @@
                 const timeoutId = setTimeout(() => {
                     controller.abort();
                      log(`[${proxy.name}] Timeout (15s) occurred for URL: ${url}`);
-                 }, 15000); // 15 second timeout
+                 }, 15000);
 
                 const proxyUrl = proxy.url(url);
-                 const headers = { // Use realistic browser headers
+                 const headers = {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                     'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
                     'Upgrade-Insecure-Requests': '1',
                     'Sec-Fetch-Dest': 'document',
                     'Sec-Fetch-Mode': 'navigate',
-                    'Sec-Fetch-Site': 'cross-site', // Changed from none/same-origin
+                    'Sec-Fetch-Site': 'cross-site',
                  };
-
 
                 const response = await fetch(proxyUrl, {
                     signal: controller.signal,
                      headers: headers,
-                     mode: 'cors', // Required for cross-origin requests via proxy
-                     referrerPolicy: 'strict-origin-when-cross-origin' // Common browser policy
+                     mode: 'cors',
+                     referrerPolicy: 'strict-origin-when-cross-origin'
                  });
                 clearTimeout(timeoutId);
 
                 if (!response.ok) {
                     let errorBody = '';
-                    try { errorBody = await response.text(); } catch (_) {} // Try to get error body
+                    try { errorBody = await response.text(); } catch (_) {}
                     log(`[${proxy.name}] HTTP Error ${response.status} (${response.statusText}). URL: ${url}. Response snippet: ${errorBody.substring(0, 200)}...`);
                     throw new Error(`HTTP 오류 ${response.status}`);
                 }
@@ -496,12 +574,11 @@
                 const contentType = response.headers.get('content-type') || '';
                 log(`[${proxy.name}] Response Content-Type: ${contentType}. URL: ${url}`);
                  if (!contentType.includes('text/html') && !contentType.includes('application/xhtml+xml') && !contentType.includes('text/plain')) {
-                     // Handle JSON or XML specifically if needed, otherwise mark as unsupported
                      if (contentType.includes('application/json')) {
                           try {
                              const json = await response.json();
                              const textContent = `JSON 데이터:\n${JSON.stringify(json, null, 2)}`.substring(0, 8000);
-                             cache.setCrawl(url, textContent); // Cache JSON content
+                             cache.setCrawl(url, textContent);
                              log(`[${proxy.name}] JSON data processed successfully. URL: ${url}`);
                              return textContent;
                           } catch (e) {
@@ -512,7 +589,7 @@
                          try {
                              const xmlText = await response.text();
                              const textContent = `XML 데이터:\n${xmlText}`.substring(0, 8000);
-                             cache.setCrawl(url, textContent); // Cache XML content
+                             cache.setCrawl(url, textContent);
                              log(`[${proxy.name}] XML data processed successfully. URL: ${url}`);
                              return textContent;
                          } catch(e) {
@@ -520,11 +597,9 @@
                              return `XML 파싱 오류. Content-Type: ${contentType}, URL: ${url}`;
                          }
                      }
-                     // If neither HTML, plain text, JSON, nor XML
                      log(`[${proxy.name}] Unsupported Content-Type: ${contentType}, URL: ${url}`);
                      return `지원하지 않는 콘텐츠 타입 (${contentType}): ${url}`;
                  }
-
 
                 const html = await response.text();
                  if (!html || html.trim().length === 0) {
@@ -532,70 +607,52 @@
                      throw new Error('빈 응답 또는 내용 없음');
                  }
 
-
                  const parser = new DOMParser();
                  const doc = parser.parseFromString(html, 'text/html');
-
-                 // Enhanced Content Extraction
                  const title = doc.querySelector('title')?.textContent.trim() || url;
                  const metaDescription = doc.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() || '';
-
-                 // Remove unwanted elements more aggressively
-                 const elementsToRemove = ['script', 'style', 'svg', 'img', 'picture', 'video', 'audio', 'iframe', 'nav', 'header', 'footer', 'aside', 'form', 'noscript', 'button', 'input', 'select', 'textarea', 'label', 'canvas', 'map', 'object', 'embed', '.advertisement', '.ad', '#ad', '.banner', '.popup', '.modal', '.sidebar', '.social-links', '.share-buttons', '.cookie-consent', '[aria-hidden="true"]']; // Added common selectors
+                 const elementsToRemove = ['script', 'style', 'svg', 'img', 'picture', 'video', 'audio', 'iframe', 'nav', 'header', 'footer', 'aside', 'form', 'noscript', 'button', 'input', 'select', 'textarea', 'label', 'canvas', 'map', 'object', 'embed', '.advertisement', '.ad', '#ad', '.banner', '.popup', '.modal', '.sidebar', '.social-links', '.share-buttons', '.cookie-consent', '[aria-hidden="true"]'];
                  elementsToRemove.forEach(selector => {
-                     try { // Add try-catch for potentially invalid selectors
+                     try {
                          doc.querySelectorAll(selector).forEach(el => el.remove());
                      } catch (e) {
                          log(`[${proxy.name}] CSS Selector Error Ignored (${selector}), URL: ${url}:`, e.message);
                      }
                  });
 
-                 // Try to find main content area, fallback to body
-                  let mainContent = doc.querySelector('main') ||
-                                   doc.querySelector('article') ||
-                                   doc.querySelector('[role="main"]') ||
-                                   // Add more common content selectors
-                                   doc.querySelector('.content, .main-content, .post-content, .entry-content, #content, #main, .article-body, .entry, .page-content'); // Common class/ID names
+                 let mainContent = doc.querySelector('main') ||
+                                  doc.querySelector('article') ||
+                                  doc.querySelector('[role="main"]') ||
+                                  doc.querySelector('.content, .main-content, .post-content, .entry-content, #content, #main, .article-body, .entry, .page-content');
 
-                  if (!mainContent || mainContent.textContent.trim().length < 100) { // Use body if main content seems too short
+                  if (!mainContent || mainContent.textContent.trim().length < 100) {
                       log(`[${proxy.name}] Main content seems small or missing, using document body. URL: ${url}`);
                       mainContent = doc.body;
                   }
 
-
-                 // Refined Text Extraction Logic
-                  let text = '';
-                  const significantTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote', 'pre', 'div', 'td']; // Tags likely to contain content blocks
-
+                 let text = '';
+                 const significantTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote', 'pre', 'div', 'td'];
                   function extractTextNodes(node) {
                       let nodeText = '';
-                      if (!node) return ''; // Guard against null nodes passed unexpectedly
+                      if (!node) return '';
                       for (const child of node.childNodes) {
                           if (child.nodeType === Node.TEXT_NODE) {
-                              nodeText += child.textContent; // Append text content directly
+                              nodeText += child.textContent;
                           } else if (child.nodeType === Node.ELEMENT_NODE) {
-                               // Check if the element is likely block-level or significant
                                const tagName = child.tagName.toLowerCase();
-                               let displayStyle = 'inline'; // Default
-                               try { // getComputedStyle can fail in some isolated browser/DOM contexts
+                               let displayStyle = 'inline';
+                               try {
                                    displayStyle = window.getComputedStyle(child).display;
                                } catch(e) {
                                    log(`[${proxy.name}] getComputedStyle error ignored (${tagName}), URL: ${url}:`, e.message);
-                                    // Simple fallback if style check fails
                                     if (['p','h1','h2','h3','h4','h5','h6','li','blockquote','pre','div','td','tr','ul','ol','section','article','aside','nav','header','footer'].includes(tagName)) {
                                         displayStyle = 'block';
                                     }
                                }
-
-
-                               // Add newline BEFORE processing block/significant elements if needed
                                if ((significantTags.includes(tagName) || displayStyle.includes('block') || displayStyle.includes('list-item')) && text.length > 0 && !text.endsWith('\n')) {
                                    nodeText += '\n';
                                }
-
-                               nodeText += extractTextNodes(child); // Recursively extract text
-
-                               // Add newline AFTER processing block/significant elements if needed
+                               nodeText += extractTextNodes(child);
                                if ((significantTags.includes(tagName) || displayStyle.includes('block') || displayStyle.includes('list-item')) && !nodeText.endsWith('\n')) {
                                    nodeText += '\n';
                                }
@@ -603,103 +660,68 @@
                       }
                       return nodeText;
                   }
-
-                  text = extractTextNodes(mainContent);
-
-
-                 // Clean up whitespace more effectively
-                 text = text.replace(/(\s*\n\s*){3,}/g, '\n\n') // Reduce multiple newlines to max two
-                           .replace(/[ \t]{2,}/g, ' ')         // Collapse multiple spaces/tabs to one space
-                           .replace(/^\s+|\s+$/gm, '')        // Trim whitespace from start/end of each line
-                           .trim();                           // Trim leading/trailing whitespace from the whole string
-
-                  // Prepend Title and Description
-                  text = `제목: ${title}\n${metaDescription ? '설명: ' + metaDescription + '\n' : ''}\n---\n\n${text}`;
-
-
-                 // Truncate if too long
-                 const maxLength = 8000; // Gemini context limit consideration
+                 text = extractTextNodes(mainContent);
+                 text = text.replace(/(\s*\n\s*){3,}/g, '\n\n').replace(/[ \t]{2,}/g, ' ').replace(/^\s+|\s+$/gm, '').trim();
+                 text = `제목: ${title}\n${metaDescription ? '설명: ' + metaDescription + '\n' : ''}\n---\n\n${text}`;
+                 const maxLength = 8000;
                  if (text.length > maxLength) {
                      text = text.substring(0, maxLength) + '... [내용 중략됨]';
                      log(`[${proxy.name}] Crawled content truncated (>${maxLength} chars). URL: ${url}`);
                  }
-
-                  if (!text || text.length < 50) { // Check for minimal content length
+                  if (!text || text.length < 50) {
                       log(`[${proxy.name}] Insufficient meaningful content extracted (length ${text?.length}). URL: ${url}`);
-                      // Still return the short text; Gemini might find something, or it will be filtered later.
                   }
-
-
                  log(`[${proxy.name}] Crawl successful. URL: ${url}, Length: ${text.length}`);
-                 cache.setCrawl(url, text); // Cache the successful result
-
-                 // Reset cooldown for this proxy if it was on cooldown before? No, successful attempt doesn't reset others' cooldowns.
+                 cache.setCrawl(url, text);
                  return text;
 
             } catch (error) {
                  log(`[${proxy.name}] Exception during crawl attempt ${attempt + 1}/${maxRetriesForUrl} for '${url}':`, error.message, error.stack);
-
-                 // Apply cooldown to the failed proxy
                  proxy.cooldownUntil = Date.now() + PROXY_COOLDOWN_MS;
                  log(`[${proxy.name}] Proxy cooldown set (${PROXY_COOLDOWN_MS / 1000}s). URL: ${url}`);
-
-                 // Retry with the next available proxy
-                 return crawlWebpage(url, attempt + 1); // *** IMPORTANT: Return the recursive call ***
+                 return crawlWebpage(url, attempt + 1);
              }
         }
 
-        async function crawlWebpages(pagesToCrawl, progressStart, progressEnd) {
+        // Modified crawlWebpages to update status UI directly
+        async function crawlWebpages(pagesToCrawl, currentStep) { // Pass current step number (2 or 4)
              const totalSites = pagesToCrawl.length;
-             if (totalSites === 0) return []; // Handle empty input
+             if (totalSites === 0) return [];
 
-             log(`Starting crawl/analysis for ${totalSites} sites.`);
-             updateProgress(progressStart, `웹페이지 분석 시작 (0/${totalSites})...`);
+             log(`Starting crawl/analysis for ${totalSites} sites (Step ${currentStep}).`);
+             updateStatusUI(currentStep, 'active', `웹페이지 분석 시작 (0/${totalSites})...`);
 
              let completedCount = 0;
              const crawlPromises = pagesToCrawl.map(async (pageInfo, index) => {
                  try {
-                      const content = await crawlWebpage(pageInfo.link); // crawlWebpage handles retries internally
+                      const content = await crawlWebpage(pageInfo.link);
                       completedCount++;
-                      // Calculate progress within the allocated range
-                      const currentProgress = progressStart + Math.floor(completedCount * (progressEnd - progressStart) / totalSites);
-                      updateProgress(currentProgress, `${totalSites}개 중 ${completedCount}개 사이트 분석 완료`);
-                      log(`Site ${index + 1}/${totalSites} analysis complete: ${pageInfo.link}, Result length: ${content?.length}`);
-                      // Return a structured result including original info and content
-                      return { ...pageInfo, content: content || '[내용 없음]', status: 'fulfilled' }; // Ensure content is never undefined
+                      // Update detail text for the current step
+                      updateStatusUI(currentStep, 'active', `${totalSites}개 중 ${completedCount}개 사이트 분석 완료`);
+                      log(`Step ${currentStep} - Site ${index + 1}/${totalSites} analysis complete: ${pageInfo.link}, Result length: ${content?.length}`);
+                      return { ...pageInfo, content: content || '[내용 없음]', status: 'fulfilled' };
                  } catch (error) {
-                      // This catch is a safeguard, crawlWebpage should handle most errors
-                      log(`Unexpected error during crawlWebpages mapping (Site ${pageInfo.link}):`, error.message, error.stack);
+                      log(`Step ${currentStep} - Unexpected error during crawlWebpages mapping (Site ${pageInfo.link}):`, error.message, error.stack);
                       completedCount++;
-                       const currentProgress = progressStart + Math.floor(completedCount * (progressEnd - progressStart) / totalSites);
-                       updateProgress(currentProgress, `${totalSites}개 중 ${completedCount}개 사이트 분석 완료 (오류 포함)`);
-                      // Return error information consistently
+                       updateStatusUI(currentStep, 'active', `${totalSites}개 중 ${completedCount}개 사이트 분석 완료 (오류 포함)`);
                       return { ...pageInfo, content: `크롤링 중 예상치 못한 오류: ${error.message}`, status: 'rejected' };
                  }
              });
 
-             // Use Promise.allSettled to ensure all promises complete, regardless of success/failure
              const results = await Promise.allSettled(crawlPromises);
-             log('All site crawl/analysis attempts finished (Promise.allSettled complete).');
-             updateProgress(progressEnd, '분석 완료, 응답 생성 준비 중...'); // Mark end of crawl phase
+             log(`Step ${currentStep} - All site crawl/analysis attempts finished.`);
+             updateStatusUI(currentStep, 'active', '분석 완료'); // Indicate completion before moving to next state
 
-             // Process settled results to return a consistent array format
              return results.map((result, index) => {
                  if (result.status === 'fulfilled') {
-                     // Log success details for debugging
-                     log(`Promise Result ${index + 1}: Fulfilled. URL: ${result.value.link}, Status: ${result.value.status}, Content starts: ${result.value.content?.substring(0, 50)}...`);
-                     return result.value; // The structure from the map function
+                     log(`Step ${currentStep} - Promise Result ${index + 1}: Fulfilled. URL: ${result.value.link}`);
+                     return result.value;
                  } else {
-                     // Log failure details for debugging
                      const reason = result.reason || 'Unknown rejection reason';
                      const errorMessage = reason.message || reason.toString();
-                     log(`Promise Result ${index + 1}: Rejected. Reason: ${errorMessage}`);
-                     // Try to return a consistent error structure using original info
+                     log(`Step ${currentStep} - Promise Result ${index + 1}: Rejected. Reason: ${errorMessage}`);
                      const originalPageInfo = pagesToCrawl[index] || { link: 'unknown', title: 'Unknown Error', snippet: '' };
-                      return {
-                          ...originalPageInfo,
-                          content: `크롤링 실패: ${errorMessage}`, // Provide the error message
-                          status: 'rejected' // Explicitly mark as rejected
-                      };
+                      return { ...originalPageInfo, content: `크롤링 실패: ${errorMessage}`, status: 'rejected' };
                  }
              });
          }
@@ -707,18 +729,19 @@
 
 
         // --- Google Gemini API Call ---
-        // Helper function to escape regex special characters
+        // (escapeRegExp 함수는 변경 없음 - 생략)
         function escapeRegExp(string) {
             return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         }
 
-        // ** NEW FUNCTION: Generate Follow-up Queries **
+        // Modified generateFollowUpQueries to update status UI
         async function generateFollowUpQueries(originalQuestion, initialAnswer) {
             const geminiApiKey = apiKeys?.GEMINI_API_KEY;
             if (!geminiApiKey) {
                 throw new Error("Gemini API Key is missing in config.js");
             }
-            updateProgress(65, '관련 추가 검색어 생성 중...'); // Progress update
+            // Step 3 is now split between initial answer and query generation
+            updateStatusUI(3, 'active', '초기 답변 기반 추가 탐색 준비 중...');
             log('Generating follow-up queries...');
 
             const prompt = `사용자의 원본 질문과 제공된 초기 답변을 바탕으로, 주제를 더 깊이 탐색하거나 관련된 구체적인 정보를 찾기 위한 관련 검색어 3개를 제안해 주세요. 각 검색어는 5~10단어 내외로 구체적으로 작성하고, 한국어로 생성해야 합니다. 결과는 번호 매기기나 설명 없이 검색어 목록만 제공해 주세요.
@@ -730,201 +753,174 @@ ${initialAnswer.substring(0, 500)}...
 
 제안 검색어 목록:`;
 
-            const requestPayload = {
-                contents: [{ role: "user", parts: [{ text: prompt }] }],
-                safetySettings: [ // Keep safety settings
-                  { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                  { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                  { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                  { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                ],
-                generationConfig: { temperature: 0.7 } // Slightly higher temp for creativity
-            };
+            const requestPayload = { /* ... payload ... */
+                 contents: [{ role: "user", parts: [{ text: prompt }] }],
+                 safetySettings: [ /* ... safety settings ... */
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                 ],
+                 generationConfig: { temperature: 0.7 }
+             };
 
-            const model = "gemini-1.5-flash-latest";
+            const model = "gemini-1.5-flash-latest"; // Use 1.5 flash for query generation for speed/cost? Or 2.0 flash? Stick with 1.5 for now.
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
 
             try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestPayload)
-                });
+                const response = await fetch(apiUrl, { /* ... fetch options ... */
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify(requestPayload)
+                 });
                 const data = await response.json();
 
-                if (!response.ok || data.error) {
-                    log('Gemini API Error (Follow-up Query Generation):', response.status, response.statusText, JSON.stringify(data));
-                    throw new Error(`Gemini API 오류 (추가 검색어 생성): ${data.error ? data.error.message : `HTTP ${response.status}`}`);
-                }
-                 if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) {
+                if (!response.ok || data.error) { /* ... error handling ... */
+                     log('Gemini API Error (Follow-up Query Generation):', response.status, response.statusText, JSON.stringify(data));
+                     throw new Error(`Gemini API 오류 (추가 검색어 생성): ${data.error ? data.error.message : `HTTP ${response.status}`}`);
+                 }
+                 if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) { /* ... no content handling ... */
                     const feedback = data.promptFeedback || data.candidates?.[0]?.finishReason;
                     log('Gemini No Response or Safety Filter (Follow-up Query Generation):', JSON.stringify(feedback), JSON.stringify(data.candidates?.[0]?.safetyRatings));
                     const reason = data.candidates?.[0]?.finishReason || data.promptFeedback?.blockReason || 'Unknown';
-                    // Don't throw an error, just return empty array if generation fails
                     log(`추가 검색어 생성 실패 (이유: ${reason}). 추가 검색 없이 진행합니다.`);
+                     updateStatusUI(3, 'active', '추가 검색어 생성 실패'); // Update status detail
                     return [];
                 }
 
                 const generatedText = data.candidates[0].content.parts[0].text;
-                // Extract queries (assuming they are line-separated)
-                const queries = generatedText.split('\n')
-                                             .map(q => q.trim())
-                                             .filter(q => q.length > 0); // Remove empty lines
-
+                const queries = generatedText.split('\n').map(q => q.trim()).filter(q => q.length > 0);
                 log('Generated follow-up queries:', queries);
-                updateProgress(70, '추가 검색어 생성 완료'); // Progress update
-                return queries.slice(0, 3); // Return max 3 queries
+                updateStatusUI(3, 'active', '추가 검색어 생성 완료'); // Update status detail
+                return queries.slice(0, 3);
 
             } catch (error) {
                 log('Exception during follow-up query generation:', error.message, error.stack);
-                // Don't throw, return empty array to allow process to continue
-                log('추가 검색어 생성 중 예외 발생. 추가 검색 없이 진행합니다.');
-                return [];
+                updateStatusUI(3, 'active', '추가 검색어 생성 중 오류'); // Update status detail on error
+                return []; // Return empty on exception
             }
         }
 
 
-        // ** MODIFIED FUNCTION: Get Gemini Response (now handles initial and final calls) **
+        // Modified getGeminiResponse to update status UI and use "생각 중"
         async function getGeminiResponse(question, processedResults, isFinalResponse = false, previousAnswer = null) {
             const geminiApiKey = apiKeys?.GEMINI_API_KEY;
             if (!geminiApiKey) {
                 throw new Error("Gemini API Key is missing in config.js");
             }
 
-            const progressStart = isFinalResponse ? 85 : 55; // Adjust progress based on stage
-            const progressEnd = isFinalResponse ? 100 : 65;
-            const statusMsg = isFinalResponse ? '최종 답변 생성 중...' : '초기 답변 생성 중...';
+            const currentStep = isFinalResponse ? 5 : 3; // Step 3 for initial, Step 5 for final
+            const statusMsg = isFinalResponse ? '종합하여 생각 중...' : '초기 분석 기반 생각 중...';
 
-            updateProgress(progressStart, statusMsg);
-            log(`Generating ${isFinalResponse ? 'final' : 'initial'} Gemini response...`);
+            updateStatusUI(currentStep, 'active', statusMsg);
+            log(`Generating ${isFinalResponse ? 'final' : 'initial'} Gemini response (Step ${currentStep})...`);
 
             let context = '';
             const validSourcesForPrompt = [];
-            let sourceCounter = 0; // Use a single counter for all sources
+            let sourceCounter = 0;
 
-             // Function to add results to context and valid list
-             const addResultsToContext = (results, prefix = "") => {
-                 results.forEach((result) => {
-                     sourceCounter++;
-                     const sourceNum = sourceCounter;
-                     const isFailure = result.content?.startsWith('크롤링 실패') || result.content?.startsWith('크롤링 건너뜀') || result.content?.startsWith('지원하지 않는 콘텐츠 타입') || result.content?.startsWith('[정보 없음]');
-                     const isSnippetFallback = result.content?.startsWith('[스니펫 요약]');
+             const addResultsToContext = (results, prefix = "") => { /* ... (no changes inside) ... */
+                  results.forEach((result) => {
+                      sourceCounter++;
+                      const sourceNum = sourceCounter;
+                      const isFailure = result.content?.startsWith('크롤링 실패') || result.content?.startsWith('크롤링 건너뜀') || result.content?.startsWith('지원하지 않는 콘텐츠 타입') || result.content?.startsWith('[정보 없음]');
+                      const isSnippetFallback = result.content?.startsWith('[스니펫 요약]');
 
-                     if ((!isFailure || isSnippetFallback) && result.content && result.content.trim() !== '') {
-                         const fullPrefix = prefix ? `${prefix} ` : ""; // Add space if prefix exists
-                         log(`Adding to Gemini context (Source ${sourceNum}): ${fullPrefix}${result.title}, Content start: ${result.content.substring(0, 100)}...`);
-                         context += `[출처 ${sourceNum}: ${fullPrefix}${result.title}]\n${result.content}\n\n---\n\n`;
-                         validSourcesForPrompt.push({...result, sourceNum, originalPrefix: prefix }); // Store original prefix if needed later for display
-                     } else {
-                         log(`Excluded from Gemini context (Source ${sourceNum}): ${prefix}${result.title}: ${result.content ? 'Content inappropriate/failed: ' + result.content.substring(0,100) + '...' : 'No content'}`);
-                         // Optionally add placeholder or skip entirely
-                         // context += `[출처 ${sourceNum}: ${prefix}${result.title}] - 정보 없음 또는 분석 실패\n\n---\n\n`;
-                         // validSourcesForPrompt.push({...result, sourceNum, originalPrefix: prefix, isExcluded: true }); // Mark as excluded if needed for display list
-                     }
-                 });
-             };
+                      if ((!isFailure || isSnippetFallback) && result.content && result.content.trim() !== '') {
+                          const fullPrefix = prefix ? `${prefix} ` : "";
+                          log(`Adding to Gemini context (Source ${sourceNum}): ${fullPrefix}${result.title}, Content start: ${result.content.substring(0, 100)}...`);
+                          context += `[출처 ${sourceNum}: ${fullPrefix}${result.title}]\n${result.content}\n\n---\n\n`;
+                          validSourcesForPrompt.push({...result, sourceNum, originalPrefix: prefix });
+                      } else {
+                          log(`Excluded from Gemini context (Source ${sourceNum}): ${prefix}${result.title}: ${result.content ? 'Content inappropriate/failed: ' + result.content.substring(0,100) + '...' : 'No content'}`);
+                      }
+                  });
+              };
 
-             // Add initial results (always present)
              addResultsToContext(processedResults.initial, "");
-
-             // Add follow-up results if this is the final response and they exist
              if (isFinalResponse && processedResults.followUp && processedResults.followUp.length > 0) {
-                 context += "\n\n===== 추가 검색 결과 =====\n\n"; // Separator for clarity in context
-                 addResultsToContext(processedResults.followUp, ""); // No prefix needed if using unified numbering
+                 context += "\n\n===== 추가 검색 결과 =====\n\n";
+                 addResultsToContext(processedResults.followUp, "");
              }
-
 
             if (!context) {
                 log("Gemini request cancelled: No valid context information available.");
-                 updateProgress(progressEnd, '유효 정보 없음');
+                 updateStatusUI(currentStep, 'active', '유효 정보 없음'); // Show error in status
                 return "웹사이트에서 관련 정보를 찾거나 분석할 수 없었습니다. 다른 질문을 시도해 보세요.";
             }
 
-             // Modify system instruction based on whether it's the final response
              const systemInstructionBase = `당신은 제공된 웹 검색 결과(출처)를 바탕으로 사용자 질문에 답변하는 AI 챗봇입니다.
 - 각 출처는 '[출처 번호: 제목]' 형식으로 시작합니다.
 - 내용을 분석하여 사용자의 질문에 대해 정확하고 상세하게, 한국어로 답변하세요.
 - 답변 내용 중 특정 출처를 참고한 부분이 있다면, 해당 문장 끝에 '[출처 번호]' 형식으로 반드시 명시하세요. (예: ... 입니다 [출처 1].)
 - 여러 출처를 종합한 경우, 관련된 모든 출처 번호를 명시하세요. (예: ... 입니다 [출처 1][출처 3].)
 - 출처 내용만으로 답변하기 어렵거나 정보가 부족하면, "제공된 정보만으로는 답변하기 어렵습니다." 또는 "정보가 부족합니다." 라고 솔직하게 답변하세요. 추측하거나 외부 지식을 사용하지 마세요.`;
-
              const finalResponseInstruction = isFinalResponse
                  ? "\n- 이것은 최종 답변입니다. 최초 검색 결과와 추가 검색 결과를 모두 종합하여 가장 완전하고 정확한 답변을 생성하세요."
                  : "\n- 이것은 초기 답변입니다. 제공된 정보만을 바탕으로 답변을 생성하세요.";
-
              const systemInstruction = systemInstructionBase + finalResponseInstruction;
 
-            const requestPayload = {
-                contents: [{
-                    role: "user",
-                    parts: [{ text: `System Instructions:\n${systemInstruction}\n\n---\n\n사용자 질문:\n${question}\n\n---\n\n웹 검색 결과 (참고 자료):\n${context}` }]
-                }],
-                 safetySettings: [ // Consistent safety settings
-                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                 ],
-                 generationConfig: { temperature: isFinalResponse ? 0.6 : 0.5 } // Slightly lower temp for initial pass?
+            const requestPayload = { /* ... payload ... */
+                 contents: [{
+                     role: "user",
+                     parts: [{ text: `System Instructions:\n${systemInstruction}\n\n---\n\n사용자 질문:\n${question}\n\n---\n\n웹 검색 결과 (참고 자료):\n${context}` }]
+                 }],
+                  safetySettings: [ /* ... safety settings ... */
+                     { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                     { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                     { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                     { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                  ],
+                  generationConfig: { temperature: isFinalResponse ? 0.6 : 0.5 }
              };
 
-            const model = "gemini-2.0-flash-thinking-exp-01-21";
+            const model = "gemini-2.0-flash"; // Use 2.0 flash for final response
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
 
-            log(`Sending ${isFinalResponse ? 'final' : 'initial'} Gemini API request...`);
-            // if (DEBUG) { log('Gemini Request Body (Partial):', JSON.stringify(requestPayload).substring(0, 500) + '...'); }
+            log(`Sending ${isFinalResponse ? 'final' : 'initial'} Gemini API request (Step ${currentStep})...`);
 
             try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestPayload)
-                });
+                const response = await fetch(apiUrl, { /* ... fetch options ... */
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify(requestPayload)
+                 });
                 const data = await response.json();
 
-                if (!response.ok || data.error) {
-                    log(`Gemini API Error (${isFinalResponse ? 'Final' : 'Initial'} Response):`, response.status, response.statusText, JSON.stringify(data));
-                    throw new Error(`Gemini API 오류 (${isFinalResponse ? '최종' : '초기'} 답변): ${data.error ? data.error.message : `HTTP ${response.status}`}`);
-                }
-                if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) {
-                     const feedback = data.promptFeedback || data.candidates?.[0]?.finishReason;
-                     log(`Gemini No Response or Safety Filter (${isFinalResponse ? 'Final' : 'Initial'} Response):`, JSON.stringify(feedback), JSON.stringify(data.candidates?.[0]?.safetyRatings));
-                     const reason = data.candidates?.[0]?.finishReason || data.promptFeedback?.blockReason || 'Unknown';
-                     let message = `Gemini가 ${isFinalResponse ? '최종' : '초기'} 응답을 생성하지 못했습니다. 이유: ${reason}.`;
-                     if (data.promptFeedback?.safetyRatings) {
-                          message += ` (안전 평가: ${data.promptFeedback.safetyRatings.map(r => `${r.category}: ${r.probability}`).join(', ')})`;
-                     }
-                     // If initial response failed, we might want to stop the process or try fallback
-                     if (!isFinalResponse) {
-                         log("초기 답변 생성 실패. 프로세스 중단.");
-                         // Consider throwing error or returning specific failure object
-                         throw new Error("초기 답변 생성 실패: " + reason);
-                     }
-                      updateProgress(progressEnd, '응답 생성 실패 (필터링)');
-                      return message; // Return failure message for final response
+                if (!response.ok || data.error) { /* ... error handling ... */
+                     log(`Gemini API Error (${isFinalResponse ? 'Final' : 'Initial'} Response):`, response.status, response.statusText, JSON.stringify(data));
+                     throw new Error(`Gemini API 오류 (${isFinalResponse ? '최종' : '초기'} 답변): ${data.error ? data.error.message : `HTTP ${response.status}`}`);
                  }
+                 if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) { /* ... no content handling ... */
+                      const feedback = data.promptFeedback || data.candidates?.[0]?.finishReason;
+                      log(`Gemini No Response or Safety Filter (${isFinalResponse ? 'Final' : 'Initial'} Response):`, JSON.stringify(feedback), JSON.stringify(data.candidates?.[0]?.safetyRatings));
+                      const reason = data.candidates?.[0]?.finishReason || data.promptFeedback?.blockReason || 'Unknown';
+                      let message = `Gemini가 ${isFinalResponse ? '최종' : '초기'} 생각을 마치지 못했습니다. 이유: ${reason}.`; // "생각" 문구 사용
+                      if (data.promptFeedback?.safetyRatings) {
+                           message += ` (안전 평가: ${data.promptFeedback.safetyRatings.map(r => `${r.category}: ${r.probability}`).join(', ')})`;
+                      }
+                      if (!isFinalResponse) {
+                          log("초기 생각 중단. 프로세스 중단.");
+                          throw new Error("초기 생각 중단: " + reason);
+                      }
+                      updateStatusUI(currentStep, 'active', '생각 중단 (필터링)'); // Update status
+                       return message;
+                  }
 
-
-                updateProgress(progressEnd, `${isFinalResponse ? '최종' : '초기'} 응답 생성 완료`);
+                updateStatusUI(currentStep, 'active', '생각 완료'); // Update status
                 log(`Received ${isFinalResponse ? 'final' : 'initial'} Gemini response.`);
                 let answer = data.candidates[0].content.parts[0].text;
 
-                // --- Post-processing Gemini Response (Common for both initial and final) ---
-                // Link Citations using the unified sourceNum from validSourcesForPrompt
-                validSourcesForPrompt.forEach(source => {
-                     // Make sure sourceNum exists (it should if added correctly)
+                // --- Post-processing Gemini Response ---
+                validSourcesForPrompt.forEach(source => { /* ... (no changes inside) ... */
                      if (source.sourceNum !== undefined) {
                          const citationRegex = new RegExp(`\\[출처\\s?${source.sourceNum}\\]`, 'g');
-                         // Use escapeHtml on link and title for safety
                          const sourceLink = `<a href="${escapeHtml(source.link)}" target="_blank" class="source-link" title="${escapeHtml(source.title)}">[출처 ${source.sourceNum}]</a>`;
                          answer = answer.replace(citationRegex, sourceLink);
                      }
                  });
 
-                // --- REMOVED: Gemini-generated source list linking and title linking ---
-                // These are replaced by the final explicit source list appended later.
-
-                // Basic Markdown to HTML (Common)
+                // Basic Markdown to HTML
                 answer = answer.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                 answer = answer.replace(/\*(.*?)\*/g, '<em>$1</em>');
                 answer = answer.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -932,130 +928,113 @@ ${initialAnswer.substring(0, 500)}...
                 answer = answer.replace(/^##\s+(.*)/gm, '<h4>$1</h4>');
                 answer = answer.replace(/^#\s+(.*)/gm, '<h3>$1</h3>');
                 answer = answer.replace(/^\s*[\-\*]\s+(.*)/gm, '<li>$1</li>');
-                answer = answer.replace(/(<li>.*<\/li>\s*)+/g, '<ul>$&</ul>'); // Wrap LIs in UL
-                 answer = answer.replace(/\n/g, '<br>'); // Convert newlines AFTER list processing
-                 // Clean up extra breaks around lists
-                 answer = answer.replace(/<\/ul><br>/g, '</ul>');
-                 answer = answer.replace(/<br><ul>/g, '<ul>');
-                 answer = answer.replace(/<li><br>/g, '<li>');
-                 answer = answer.replace(/<br><\/li>/g, '</li>');
+                answer = answer.replace(/(<li>.*<\/li>\s*)+/g, '<ul>$&</ul>');
+                answer = answer.replace(/\n/g, '<br>');
+                answer = answer.replace(/<\/ul><br>/g, '</ul>');
+                answer = answer.replace(/<br><ul>/g, '<ul>');
+                answer = answer.replace(/<li><br>/g, '<li>');
+                answer = answer.replace(/<br><\/li>/g, '</li>');
 
-
-                // Return the processed answer (and the valid sources used, if needed for final list)
                 return { answer, sources: validSourcesForPrompt };
 
             } catch (error) {
                 log(`Exception during ${isFinalResponse ? 'final' : 'initial'} Gemini response generation/processing:`, error.message, error.stack);
-                 updateProgress(progressEnd, '응답 처리 중 오류 발생');
-                 // If initial response fails critically, re-throw to stop process
-                 if (!isFinalResponse && error.message.includes("초기 답변 생성 실패")) {
+                 updateStatusUI(currentStep, 'active', '생각 중 오류 발생'); // Update status on error
+                 if (!isFinalResponse && error.message.includes("초기 생각 중단")) {
                      throw error;
                  }
-                 // For final response, return error message
-                 return `Gemini ${isFinalResponse ? '최종' : '초기'} 응답 처리 중 오류 발생: ${error.message}`;
-            }
+                 return `Gemini ${isFinalResponse ? '최종' : '초기'} 생각 중 오류 발생: ${error.message}`; // "생각" 문구 사용
+             }
         }
 
 
         // --- Main Message Processing Orchestrator ---
         async function processMessage(message) {
             addUserMessage(message);
-            setLoadingState(true);
+            setLoadingState(true); // Creates status UI
 
             let initialSearchResults = [];
             let initialProcessedResults = [];
             let followUpSearchResults = [];
             let followUpProcessedResults = [];
-            let allOriginalSearchResults = []; // To store all results for the final list
+            let allOriginalSearchResults = [];
 
             try {
-                // ===== STAGE 1: Initial Search & Crawl =====
-                updateLoadingMessage('1단계: Google 검색 중...');
-                initialSearchResults = await googleSearch(message, 8); // Fetch 8 initial results
-                allOriginalSearchResults = [...initialSearchResults]; // Add to the final list
+                // ===== STAGE 1: Initial Search =====
+                updateStatusUI(1, 'active', 'Google 검색 중...');
+                initialSearchResults = await googleSearch(message, 8);
+                allOriginalSearchResults = [...initialSearchResults];
                 if (!initialSearchResults || initialSearchResults.length === 0) {
+                    updateStatusUI(1, 'completed', '관련 웹페이지 없음'); // Mark step 1 complete with status
                     addBotMessage('관련 웹페이지를 찾을 수 없습니다. 다른 검색어나 질문을 시도해 보세요.');
-                    updateProgress(100, '검색 결과 없음');
-                    setLoadingState(false);
+                    // setLoadingState(false) will be called in finally
                     return;
                 }
+                 updateStatusUI(1, 'completed', `${initialSearchResults.length}개 결과 찾음`); // Mark step 1 complete
                 log("Initial search results count:", initialSearchResults.length);
 
-                updateLoadingMessage('1단계: 웹페이지 정보 분석 중...');
+                // ===== STAGE 2: Initial Crawl & Analysis =====
+                // updateStatusUI(2, 'active', '웹페이지 분석 시작...'); // crawlWebpages handles the initial message
                 const initialPagesToCrawl = initialSearchResults.map(r => ({ link: r.link, title: r.title, snippet: r.snippet }));
-                // Allocate progress: Search (0-10), Crawl (10-50), Initial Gemini (50-65)
-                initialProcessedResults = await crawlWebpages(initialPagesToCrawl, 10, 50);
+                initialProcessedResults = await crawlWebpages(initialPagesToCrawl, 2); // Pass step number 2
+                 updateStatusUI(2, 'completed', '초기 분석 완료'); // Mark step 2 complete
                 log("Initial crawl results count:", initialProcessedResults.length);
 
-                // Apply Snippet Fallback for initial results
-                initialProcessedResults = initialProcessedResults.map(result => {
-                    const crawlFailed = result.status === 'rejected' || result.content?.startsWith('크롤링 실패') || result.content?.startsWith('크롤링 건너뜀') || result.content?.startsWith('지원하지 않는 콘텐츠 타입');
-                    const hasSnippet = result.snippet && result.snippet.trim() !== '';
-                    if (crawlFailed && hasSnippet) {
-                        log(`Using snippet for initial result: ${result.title}`);
-                        return { ...result, content: `[스니펫 요약] ${result.snippet}`, status: 'fulfilled_with_snippet' };
-                    } else if (crawlFailed) {
-                        log(`No snippet for failed initial crawl: ${result.title}`);
-                        return { ...result, content: `[정보 없음] ${result.content || '크롤링 실패'}`, status: 'rejected_no_snippet' };
-                    }
-                    return { ...result, status: 'fulfilled' }; // Mark successful crawls explicitly
-                });
+                // Apply Snippet Fallback
+                initialProcessedResults = initialProcessedResults.map(result => { /* ... (no changes here) ... */
+                     const crawlFailed = result.status === 'rejected' || result.content?.startsWith('크롤링 실패') || result.content?.startsWith('크롤링 건너뜀') || result.content?.startsWith('지원하지 않는 콘텐츠 타입');
+                     const hasSnippet = result.snippet && result.snippet.trim() !== '';
+                     if (crawlFailed && hasSnippet) {
+                         log(`Using snippet for initial result: ${result.title}`);
+                         return { ...result, content: `[스니펫 요약] ${result.snippet}`, status: 'fulfilled_with_snippet' };
+                     } else if (crawlFailed) {
+                         log(`No snippet for failed initial crawl: ${result.title}`);
+                         return { ...result, content: `[정보 없음] ${result.content || '크롤링 실패'}`, status: 'rejected_no_snippet' };
+                     }
+                     return { ...result, status: 'fulfilled' };
+                 });
 
 
-                // ===== STAGE 2: Generate Initial Gemini Response (Internal Only) =====
-                updateLoadingMessage('2단계: 초기 답변 생성 중 (내부)...');
-                // Prepare data structure for getGeminiResponse
+                // ===== STAGE 3: Initial Gemini Response & Follow-up Query Generation =====
+                // updateStatusUI(3, 'active', '초기 분석 기반 생각 중...'); // getGeminiResponse handles this
                 const initialDataForGemini = { initial: initialProcessedResults };
-                const initialGeminiResult = await getGeminiResponse(message, initialDataForGemini, false);
+                const initialGeminiResult = await getGeminiResponse(message, initialDataForGemini, false); // isFinalResponse = false
 
-                // Check if the result is an error string or the expected object
-                if (typeof initialGeminiResult === 'string') {
-                    // Handle error message from getGeminiResponse
-                     log("초기 답변 생성 실패:", initialGeminiResult);
-                     addBotMessage(initialGeminiResult); // Show the error
-                     updateProgress(100, '초기 답변 생성 오류');
-                     setLoadingState(false);
-                     return;
-                 }
-                 if (!initialGeminiResult || !initialGeminiResult.answer) {
-                      log("초기 답변 생성 실패: 유효하지 않은 응답 객체");
-                      addBotMessage("초기 답변 생성 중 문제가 발생했습니다.");
-                      updateProgress(100, '초기 답변 생성 오류');
-                      setLoadingState(false);
-                      return;
-                 }
-
-                 const initialAnswerText = initialGeminiResult.answer; // Use the answer text
-                 log("Initial Gemini response generated internally.");
-                 // ** DO NOT DISPLAY initialAnswerText to the user **
-
-
-                // ===== STAGE 3: Generate Follow-up Queries =====
-                updateLoadingMessage('3단계: 추가 검색어 생성 중...');
+                if (typeof initialGeminiResult === 'string' || !initialGeminiResult || !initialGeminiResult.answer) {
+                    const errorMsg = typeof initialGeminiResult === 'string' ? initialGeminiResult : "초기 생각 중 문제가 발생했습니다.";
+                    log("초기 생각/답변 생성 실패:", errorMsg);
+                     updateStatusUI(3, 'completed', '초기 생각 오류'); // Mark step 3 complete with error status
+                    addBotMessage(errorMsg);
+                    return; // Stop processing
+                }
+                const initialAnswerText = initialGeminiResult.answer;
+                log("Initial Gemini response generated internally (Step 3 Part 1 done).");
+                // Now generate follow-up queries (also part of Step 3)
                 const followUpQueries = await generateFollowUpQueries(message, initialAnswerText);
+                 updateStatusUI(3, 'completed', followUpQueries.length > 0 ? `${followUpQueries.length}개 추가 검색어 생성` : '추가 검색어 없음'); // Mark step 3 complete
 
+
+                // ===== STAGE 4: Follow-up Search & Crawl =====
                 if (!followUpQueries || followUpQueries.length === 0) {
-                    log("No follow-up queries generated or generation failed. Proceeding without additional search.");
-                    // Skip stage 4 and go directly to final response generation with initial data only
+                    log("Skipping Step 4: No follow-up queries.");
+                     updateStatusUI(4, 'completed', '추가 검색 건너뜀'); // Mark step 4 as skipped/complete
+                    followUpProcessedResults = []; // Ensure it's empty for final response
                 } else {
-                    // ===== STAGE 4: Follow-up Search & Crawl =====
-                    updateLoadingMessage(`4단계: 추가 정보 검색 중 (${followUpQueries.length}개)...`);
-                    let followUpSearchPromises = followUpQueries.map(query => googleSearch(query, 3)); // Fetch 3 results per query
+                    updateStatusUI(4, 'active', `추가 정보 검색 중 (${followUpQueries.length}개)...`);
+                    let followUpSearchPromises = followUpQueries.map(query => googleSearch(query, 3));
                     const followUpSearchResultsNested = await Promise.all(followUpSearchPromises);
-                    followUpSearchResults = followUpSearchResultsNested.flat(); // Flatten the array of arrays
-                    allOriginalSearchResults.push(...followUpSearchResults); // Add to the final list
-
+                    followUpSearchResults = followUpSearchResultsNested.flat();
+                    allOriginalSearchResults.push(...followUpSearchResults);
                     log("Follow-up search results count:", followUpSearchResults.length);
 
                     if (followUpSearchResults.length > 0) {
-                        updateLoadingMessage('4단계: 추가 웹페이지 분석 중...');
+                        // updateStatusUI(4, 'active', '추가 웹페이지 분석 시작...'); // crawlWebpages handles this
                         const followUpPagesToCrawl = followUpSearchResults.map(r => ({ link: r.link, title: r.title, snippet: r.snippet }));
-                         // Allocate progress: Follow-up Query (65-70), Follow-up Search/Crawl (70-85), Final Gemini (85-100)
-                         followUpProcessedResults = await crawlWebpages(followUpPagesToCrawl, 70, 85);
-                         log("Follow-up crawl results count:", followUpProcessedResults.length);
+                        followUpProcessedResults = await crawlWebpages(followUpPagesToCrawl, 4); // Pass step number 4
+                        log("Follow-up crawl results count:", followUpProcessedResults.length);
 
-                         // Apply Snippet Fallback for follow-up results
-                         followUpProcessedResults = followUpProcessedResults.map(result => {
+                        // Apply Snippet Fallback
+                        followUpProcessedResults = followUpProcessedResults.map(result => { /* ... (no changes here) ... */
                              const crawlFailed = result.status === 'rejected' || result.content?.startsWith('크롤링 실패') || result.content?.startsWith('크롤링 건너뜀') || result.content?.startsWith('지원하지 않는 콘텐츠 타입');
                              const hasSnippet = result.snippet && result.snippet.trim() !== '';
                              if (crawlFailed && hasSnippet) {
@@ -1067,78 +1046,65 @@ ${initialAnswer.substring(0, 500)}...
                              }
                              return { ...result, status: 'fulfilled' };
                          });
+                         updateStatusUI(4, 'completed', '추가 분석 완료'); // Mark step 4 complete
                      } else {
-                         log("추가 검색 결과 없음.");
-                         followUpProcessedResults = []; // Ensure it's an empty array
-                         updateProgress(85, '추가 검색 결과 없음'); // Skip crawl progress if no search results
+                         log("No results found for follow-up queries.");
+                         updateStatusUI(4, 'completed', '추가 검색 결과 없음'); // Mark step 4 complete
+                         followUpProcessedResults = [];
                      }
                  }
 
                 // ===== STAGE 5: Generate Final Gemini Response =====
-                updateLoadingMessage('5단계: 최종 답변 생성 중...');
-                // Prepare combined data for the final response generation
+                // updateStatusUI(5, 'active', '종합하여 생각 중...'); // getGeminiResponse handles this
                 const finalDataForGemini = {
                     initial: initialProcessedResults,
-                    followUp: followUpProcessedResults // Pass follow-up results (could be empty)
+                    followUp: followUpProcessedResults
                 };
-                const finalGeminiResult = await getGeminiResponse(message, finalDataForGemini, true, initialAnswerText); // Pass isFinalResponse=true
+                const finalGeminiResult = await getGeminiResponse(message, finalDataForGemini, true, initialAnswerText); // isFinalResponse = true
 
-                // Check for errors in final response generation
-                 if (typeof finalGeminiResult === 'string') {
-                      log("최종 답변 생성 실패:", finalGeminiResult);
-                      addBotMessage(finalGeminiResult); // Show the error
-                      updateProgress(100, '최종 답변 생성 오류');
-                      setLoadingState(false);
-                      return;
-                  }
-                  if (!finalGeminiResult || !finalGeminiResult.answer) {
-                       log("최종 답변 생성 실패: 유효하지 않은 응답 객체");
-                       addBotMessage("최종 답변 생성 중 문제가 발생했습니다.");
-                       updateProgress(100, '최종 답변 생성 오류');
-                       setLoadingState(false);
-                       return;
-                  }
-
+                if (typeof finalGeminiResult === 'string' || !finalGeminiResult || !finalGeminiResult.answer) {
+                     const errorMsg = typeof finalGeminiResult === 'string' ? finalGeminiResult : "최종 생각 중 문제가 발생했습니다.";
+                     log("최종 생각/답변 생성 실패:", errorMsg);
+                      updateStatusUI(5, 'completed', '최종 생각 오류'); // Mark step 5 complete with error
+                     addBotMessage(errorMsg);
+                     return; // Stop processing
+                 }
+                 updateStatusUI(5, 'completed', '답변 준비 완료!'); // Mark step 5 complete
 
                  const finalAnswerHtml = finalGeminiResult.answer;
-                 removeLoadingMessage(); // Remove loading indicator *before* adding final message
-                 const botMsgElement = addBotMessage(finalAnswerHtml, true); // Display final answer (HTML formatted)
+                 // removeStatusUI() is called within addBotMessage now
+                 const botMsgElement = addBotMessage(finalAnswerHtml, true); // Display final answer
 
 
                 // ===== STAGE 6: Append Combined Original Search Results List =====
                 if (botMsgElement && allOriginalSearchResults.length > 0) {
                     const sourcesDiv = document.createElement('div');
                     sourcesDiv.className = 'mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 no-print';
-
-                    // Create the combined list HTML
                     let sourcesHtml = '<p class="font-medium mb-2">참고한 원본 검색 결과 (1차 및 2차 포함):</p><ul class="list-disc list-inside space-y-1">';
-                     // Use a Set to prevent duplicate links in the final list
                      const uniqueLinks = new Set();
-                     allOriginalSearchResults.forEach((result, index) => {
+                     allOriginalSearchResults.forEach((result) => {
                          if (result && result.link && !uniqueLinks.has(result.link)) {
                               uniqueLinks.add(result.link);
-                              sourcesHtml += `<li><a href="${escapeHtml(result.link)}" target="_blank" class="source-link hover:underline" title="${escapeHtml(result.snippet)}">${escapeHtml(result.title)}</a></li>`;
+                              sourcesHtml += `<li><a href="${escapeHtml(result.link)}" target="_blank" class="source-link hover:underline" title="${escapeHtml(result.snippet || '')}">${escapeHtml(result.title)}</a></li>`; // Added snippet fallback
                          }
                      });
                     sourcesHtml += '</ul>';
                     sourcesDiv.innerHTML = sourcesHtml;
-
                     botMsgElement.appendChild(sourcesDiv);
-                    scrollToBottom(); // Scroll after adding the final element
+                    scrollToBottom();
                 }
 
             } catch (error) {
-                // Catch errors from any stage (search, crawl, Gemini calls)
                 log('전체 처리 과정 중 오류 발생:', error.message, error.stack);
-                removeLoadingMessage(); // Ensure loading message is removed on error
-                addBotMessage(`처리 중 오류가 발생했습니다: ${error.message}`);
-                updateProgress(100, '오류 발생'); // Set progress to 100% to hide the bar
-            } finally {
-                setLoadingState(false); // Ensure UI is re-enabled
-                 // Make sure progress bar hides if not already hidden by 100% completion
-                 if (!progressSection.classList.contains('hidden') && progressBar.style.width !== '100%') {
-                      setTimeout(() => updateProgress(100, progressStatus.textContent || '완료'), 200); // Force hide after slight delay
+                 // Try to mark the current step as failed if possible, otherwise just show generic error
+                 const currentActiveStep = document.querySelector('.status-item.status-active');
+                 if (currentActiveStep) {
+                     const stepNum = currentActiveStep.dataset.step;
+                     updateStatusUI(stepNum, 'completed', '오류 발생'); // Mark active step as completed with error
                  }
+                addBotMessage(`처리 중 오류가 발생했습니다: ${error.message}`);
+            } finally {
+                setLoadingState(false); // This will now keep the status UI until addBotMessage removes it
             }
         }
 
@@ -1147,24 +1113,23 @@ ${initialAnswer.substring(0, 500)}...
         // (이벤트 리스너 코드는 변경 없음 - 생략)
         sendButton.addEventListener('click', () => {
             const message = userInput.value.trim();
-            if (message && !sendButton.disabled) { // Check if not disabled
+            if (message && !sendButton.disabled) {
                 userInput.value = '';
-                userInput.focus(); // Keep focus on input
+                userInput.focus();
                 processMessage(message);
             }
         });
 
         userInput.addEventListener('keypress', (e) => {
-            // Send on Enter key press (if not disabled)
             if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) {
-                e.preventDefault(); // Prevent default form submission/newline
+                e.preventDefault();
                 sendButton.click();
             }
         });
 
 
         // --- Initialization ---
-        log("챗봇 초기화 완료. 2단계 검색 및 답변 생성 로직 적용됨."); // Updated log message
+        log("챗봇 초기화 완료. 단계별 상태 표시 UI 적용됨.");
         userInput.focus();
 
     </script>
