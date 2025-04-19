@@ -647,7 +647,7 @@ ${initialAnswer.substring(0,500)}
     generationConfig: { temperature: 0.7 }
   };
 
-  const model = "gemini-2.5-flash-preview-04-17";
+  const model = "gemini-2.0-flash-thinking-exp";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
   try {
     const resp = await fetch(url, {
@@ -724,7 +724,7 @@ ${isFinal?"이것은 최종 답변입니다.":"이것은 초기 답변입니다.
     ],
     generationConfig: { temperature: isFinal?0.6:0.5 }
   };
-  const model = "gemini-2.0-flash-thinking-exp"; // 모델 변경됨 (원래 gemini-2.0-flash 였음, 확인 필요)
+  const model = "gemini-2.5-flash-preview-04-17"; // 모델 변경됨 (원래 gemini-2.0-flash 였음, 확인 필요)
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
   try {
     const resp = await fetch(url, {
